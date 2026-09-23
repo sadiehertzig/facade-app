@@ -906,3 +906,17 @@ footer {
     display: none;
   }
 }
+
+.app-link {
+  margin-top: 14px;
+}
+
+.app-qr {
+  flex-shrink: 0;
+  width: 132px;
+  height: 132px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}

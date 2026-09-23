@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowUpRight, Cloud, Smartphone, WandSparkles } from "lucide-react";
@@ -12,6 +13,9 @@ import { OPENRAIL_LICENSE_URL } from "@/lib/protection-recipe";
 // The full PhotoGuard demo (server/photoguard_demo) is a separate Gradio app.
 // On the server, Caddy sends /photoguard/ to it; it is not part of this Next.js app.
 const PHOTOGUARD_DEMO_URL = "/photoguard/";
+
+// Public TestFlight link for the iPhone beta (FACADE Photo Shield on App Store Connect).
+const TESTFLIGHT_URL = "https://testflight.apple.com/join/dxMRcMkd";
 
 export default function Home() {
   const [section, setSection] = useState("prepare");
@@ -50,6 +54,8 @@ export default function Home() {
           <ProtectionWorkspace />
 
           <PhotoGuardDemoCard />
+
+          <GetTheAppCard />
 
           <div className="support-strip">
             <div>
@@ -192,6 +198,36 @@ function PhotoGuardDemoCard() {
       <a className="demo-link" href={PHOTOGUARD_DEMO_URL}>
         Open the PhotoGuard demo <ArrowUpRight size={16} />
       </a>
+    </section>
+  );
+}
+
+function GetTheAppCard() {
+  return (
+    <section className="demo-card" aria-labelledby="app-heading">
+      <div className="demo-icon">
+        <Smartphone size={26} />
+      </div>
+      <div className="demo-text">
+        <p className="eyebrow">ON YOUR IPHONE</p>
+        <h2 id="app-heading">Get the FACADE app (beta)</h2>
+        <p>
+          The FACADE iPhone app protects photos entirely on your phone; nothing is uploaded. It is a beta built for the 2026
+          Congressional App Challenge. First install Apple&apos;s free TestFlight app from the App Store, then open the link below on
+          your iPhone or scan the code with its camera.
+        </p>
+        <p className="demo-note">
+          Protection is experimental. See the{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer">
+            privacy policy
+          </a>
+          .
+        </p>
+        <a className="demo-link app-link" href={TESTFLIGHT_URL} target="_blank" rel="noreferrer">
+          Join the TestFlight beta <ArrowUpRight size={16} />
+        </a>
+      </div>
+      <Image className="app-qr" src="/testflight-qr.svg" alt="QR code for the FACADE TestFlight beta link" width={132} height={132} unoptimized />
     </section>
   );
 }
