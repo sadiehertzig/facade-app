@@ -322,6 +322,23 @@ def test_caddyfile_body_limits_are_per_route_and_match_the_demo():
     assert "max_file_size=MAX_FILE_SIZE" in app_source
 
 
+def test_privacy_page_is_the_only_public_route_and_is_static():
+    """Apple reviewers must reach /privacy without the password; it serves one static file, nothing else."""
+    lines = _caddy_lines()
+    privacy_start, privacy_body = _block(lines, "handle /privacy {")
+    web_start, _ = _block(lines, "handle {")
+    assert privacy_start < web_start, "public page before the catch-all"
+    assert privacy_body == ["handle /privacy {", "root * /opt/facade/src/deploy/public",
+                            "rewrite * /privacy.html", "file_server", "}"]
+    assert not any("reverse_proxy" in line or "import" in line for line in privacy_body)
+    assert "redir /privacy/ /privacy 308" in [line.strip() for line in lines]
+    page = (DEPLOY / "public" / "privacy.html").read_text()
+    assert "<title>FACADE Photo Shield: Privacy Policy</title>" in page
+    assert "on your iPhone" in page and "never used to train" in page
+    assert not re.search(r"<script|src=\"http", page), "self-contained: no scripts or remote assets"
+    assert sorted(p.name for p in (DEPLOY / "public").iterdir()) == ["privacy.html"]
+
+
 def test_demo_root_path_matches_the_caddy_route():
     demo = one(unit("facade-demo.service"), "Service", "ExecStart")
     root = demo.split("--root-path ", 1)[1].split()[0]

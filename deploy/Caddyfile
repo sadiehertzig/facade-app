@@ -11,6 +11,9 @@
 #                                      basic_auth. The path is passed through
 #                                      unchanged; the demo runs with
 #                                      --root-path /photoguard.
+#   /privacy        -> deploy/public/privacy.html, a static page served by Caddy
+#                                      itself. PUBLIC (no basic auth) so Apple's
+#                                      reviewers can read the privacy policy.
 #   everything else -> 127.0.0.1:3000  the FACADE website (Next.js), behind
 #                                      basic_auth.
 #
@@ -55,6 +58,16 @@
 		reverse_proxy 127.0.0.1:7860 {
 			flush_interval -1
 		}
+	}
+
+	# The privacy policy is the one public page (Apple's TestFlight and App Store
+	# reviewers must be able to open it). It is a self-contained static file from
+	# this repository, served directly by Caddy: no website code, no photos, no auth.
+	redir /privacy/ /privacy 308
+	handle /privacy {
+		root * /opt/facade/src/deploy/public
+		rewrite * /privacy.html
+		file_server
 	}
 
 	handle {
