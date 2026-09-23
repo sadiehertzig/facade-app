@@ -1,0 +1,67 @@
+# FACADE server: one hostname, automatic HTTPS (installed by bootstrap.sh as
+# /etc/caddy/Caddyfile).
+#
+# FACADE_HOST comes from /etc/facade/host.env (SSM /facade/prod/host) through
+# the caddy.service drop-in; it is substituted before parsing.
+#
+#   /v1/*           -> 127.0.0.1:8000  PhotoGuard /v1 worker. No basic auth: the
+#                                      worker's own constant-time bearer check
+#                                      protects it.
+#   /photoguard/*   -> 127.0.0.1:7860  upstream PhotoGuard Gradio demo, behind
+#                                      basic_auth. The path is passed through
+#                                      unchanged; the demo runs with
+#                                      --root-path /photoguard.
+#   everything else -> 127.0.0.1:3000  the FACADE website (Next.js), behind
+#                                      basic_auth.
+#
+# The `basic_auth { owner <bcrypt> }` block is imported from a 0640 root:caddy
+# file that bootstrap.sh writes from SSM /facade/prod/basic-auth-hash, so the
+# hash is never in this repository.
+#
+# Request bodies: 12MB on /v1 (the worker itself caps at 4 MiB), 64MB for the
+# demo (full-resolution editor uploads), 12MB for the website (its API routes
+# cap uploads at 4 MiB).
+#
+# There is deliberately no `log` directive: no access log is written.
+# reverse_proxy has no read/write timeout by default, streams text/event-stream
+# (Gradio's queue) immediately and tunnels WebSocket upgrades, so long Gradio
+# jobs are not cut off.
+
+{$FACADE_HOST} {
+	handle /v1/* {
+		request_body {
+			max_size 12MB
+		}
+		reverse_proxy 127.0.0.1:8000 {
+			# Buffer the whole body so the worker always gets a Content-Length
+			# (it rejects Transfer-Encoding, e.g. from HTTP/2 clients that omit
+			# content-length). The worker itself caps requests at 4 MiB.
+			request_buffers 12MB
+		}
+	}
+
+	# The demo lives under /photoguard/ (its --root-path); send the bare path
+	# there so the page and its assets resolve under the same prefix.
+	redir /photoguard /photoguard/ 308
+
+	handle /photoguard/* {
+		# The Gradio 6 image editor re-uploads the painted photo at full resolution
+		# as separate PNGs (background, layer, composite); a 24 MP phone photo is
+		# ~40 MB each. Keep in step with max_file_size in server/photoguard_demo/app.py.
+		request_body {
+			max_size 64MB
+		}
+		import /etc/caddy/facade-auth.caddy
+		reverse_proxy 127.0.0.1:7860 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		request_body {
+			max_size 12MB
+		}
+		import /etc/caddy/facade-auth.caddy
+		reverse_proxy 127.0.0.1:3000
+	}
+}

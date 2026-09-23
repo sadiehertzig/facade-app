@@ -1,0 +1,349 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FA0CADE00000000000000101 /* FACADEKit in Frameworks */ = {isa = PBXBuildFile; productRef = FA0CADE00000000000000301 /* FACADEKit */; };
+		FA0CADE00000000000000102 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = FA0CADE00000000000000013 /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		FA0CADE00000000000000001 /* FACADE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FACADE.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA0CADE00000000000000010 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		FA0CADE00000000000000011 /* Local.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text; path = Local.xcconfig.example; sourceTree = "<group>"; };
+		FA0CADE00000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FA0CADE00000000000000013 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		FA0CADE00000000000000014 /* FACADE.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FACADE.entitlements; sourceTree = "<group>"; };
+		FA0CADE00000000000000015 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		FA0CADE00000000000000016 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = Models/README.md; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		FA0CADE00000000000000025 /* Exceptions for "Native" folder in "FACADE" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				include/module.modulemap,
+			);
+			target = FA0CADE00000000000000200 /* FACADE */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		FA0CADE00000000000000020 /* App */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = App;
+			sourceTree = "<group>";
+		};
+		FA0CADE00000000000000021 /* Native */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				FA0CADE00000000000000025 /* Exceptions for "Native" folder in "FACADE" target */,
+			);
+			path = Native;
+			sourceTree = "<group>";
+		};
+		FA0CADE00000000000000022 /* Resources */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FA0CADE00000000000000210 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA0CADE00000000000000101 /* FACADEKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FA0CADE00000000000000030 = {
+			isa = PBXGroup;
+			children = (
+				FA0CADE00000000000000015 /* README.md */,
+				FA0CADE00000000000000031 /* FACADE */,
+				FA0CADE00000000000000016 /* README.md */,
+				FA0CADE00000000000000033 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FA0CADE00000000000000031 /* FACADE */ = {
+			isa = PBXGroup;
+			children = (
+				FA0CADE00000000000000020 /* App */,
+				FA0CADE00000000000000021 /* Native */,
+				FA0CADE00000000000000022 /* Resources */,
+				FA0CADE00000000000000032 /* Config */,
+			);
+			path = FACADE;
+			sourceTree = "<group>";
+		};
+		FA0CADE00000000000000032 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				FA0CADE00000000000000010 /* Base.xcconfig */,
+				FA0CADE00000000000000011 /* Local.xcconfig.example */,
+				FA0CADE00000000000000012 /* Info.plist */,
+				FA0CADE00000000000000013 /* PrivacyInfo.xcprivacy */,
+				FA0CADE00000000000000014 /* FACADE.entitlements */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		FA0CADE00000000000000033 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FA0CADE00000000000000001 /* FACADE.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FA0CADE00000000000000200 /* FACADE */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FA0CADE00000000000000402 /* Build configuration list for PBXNativeTarget "FACADE" */;
+			buildPhases = (
+				FA0CADE00000000000000214 /* Check C/C++ libraries */,
+				FA0CADE00000000000000211 /* Sources */,
+				FA0CADE00000000000000210 /* Frameworks */,
+				FA0CADE00000000000000212 /* Resources */,
+				FA0CADE00000000000000213 /* Copy private models */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FA0CADE00000000000000020 /* App */,
+				FA0CADE00000000000000021 /* Native */,
+				FA0CADE00000000000000022 /* Resources */,
+			);
+			name = FACADE;
+			packageProductDependencies = (
+				FA0CADE00000000000000301 /* FACADEKit */,
+			);
+			productName = FACADE;
+			productReference = FA0CADE00000000000000001 /* FACADE.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FA0CADE00000000000000100 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+			};
+			buildConfigurationList = FA0CADE00000000000000401 /* Build configuration list for PBXProject "FACADE" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = FA0CADE00000000000000030;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FA0CADE00000000000000300 /* XCLocalSwiftPackageReference "FACADEKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = FA0CADE00000000000000033 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FA0CADE00000000000000200 /* FACADE */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FA0CADE00000000000000212 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FA0CADE00000000000000102 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		FA0CADE00000000000000214 /* Check C/C++ libraries */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Check C/C++ libraries";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "for lib in libopencv_core.a libopencv_imgproc.a libsleef.a libjpeg.a; do\n  if [ ! -f \"$FACADE_VENDOR_DIR/lib/$lib\" ]; then\n    echo \"error: The C/C++ libraries are missing ($FACADE_VENDOR_DIR/lib/$lib). Run app/ios/scripts/build_native_deps.sh once, then build again. See app/ios/README.md.\"\n    exit 1\n  fi\ndone\n";
+			showEnvVarsInLog = 0;
+		};
+		FA0CADE00000000000000213 /* Copy private models */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy private models";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SRCROOT/scripts/copy_models.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FA0CADE00000000000000211 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		FA0CADE00000000000000411 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+			};
+			name = Debug;
+		};
+		FA0CADE00000000000000412 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FA0CADE00000000000000421 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FA0CADE00000000000000010 /* Base.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		FA0CADE00000000000000422 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = FA0CADE00000000000000010 /* Base.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FA0CADE00000000000000401 /* Build configuration list for PBXProject "FACADE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA0CADE00000000000000411 /* Debug */,
+				FA0CADE00000000000000412 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FA0CADE00000000000000402 /* Build configuration list for PBXNativeTarget "FACADE" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA0CADE00000000000000421 /* Debug */,
+				FA0CADE00000000000000422 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		FA0CADE00000000000000300 /* XCLocalSwiftPackageReference "FACADEKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = FACADEKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		FA0CADE00000000000000301 /* FACADEKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA0CADE00000000000000300 /* XCLocalSwiftPackageReference "FACADEKit" */;
+			productName = FACADEKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = FA0CADE00000000000000100 /* Project object */;
+}

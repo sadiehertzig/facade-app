@@ -1,0 +1,54 @@
+# FACADE server: the ported upstream MadryLab PhotoGuard Gradio demo
+# (immunize + SD1.5-inpainting edit comparison, server/photoguard_demo/).
+# Loopback only; Caddy serves it at https://$FACADE_HOST/photoguard/ behind
+# basic_auth, so it runs with --root-path /photoguard.
+# Gradio temp files go to the instance-store NVMe (/opt/dlami/nvme, wiped on
+# stop/start) when it is mounted, else /var/tmp/facade-gradio. The directory is
+# emptied on every start and stop; ExecStartPre writes the choice to
+# /run/facade-demo.env, which overrides the Environment= default below.
+[Unit]
+Description=FACADE upstream PhotoGuard demo (Gradio, 127.0.0.1:7860)
+Requires=facade-models.service
+After=facade-models.service nvidia-persistenced.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=facade
+Group=facade
+WorkingDirectory=/var/lib/facade
+StandardOutput=journal
+StandardError=journal
+Environment=HOME=/var/lib/facade
+Environment=HF_HOME=/var/lib/facade/hf-home
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+Environment=GRADIO_ANALYTICS_ENABLED=False
+Environment=GRADIO_TEMP_DIR=/var/tmp/facade-gradio
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TQDM_DISABLE=1
+EnvironmentFile=-/run/facade-demo.env
+# nvidia-uvm: an unprivileged CUDA process under NoNewPrivileges cannot run the
+# setuid nvidia-modprobe that creates /dev/nvidia-uvm on first use, so cuInit
+# fails (999) after every reboot or stop/start. Create it as root first; the
+# leading "-" keeps a failure here (e.g. no nvidia-modprobe binary) non-fatal.
+ExecStartPre=-+/usr/bin/nvidia-modprobe -u -c=0
+ExecStartPre=+/bin/sh -c 'd=/var/tmp/facade-gradio; if mountpoint -q /opt/dlami/nvme; then d=/opt/dlami/nvme/facade-gradio; fi; rm -rf /opt/dlami/nvme/facade-gradio /var/tmp/facade-gradio; install -d -m 0700 -o facade -g facade "$$d"; echo "GRADIO_TEMP_DIR=$$d" > /run/facade-demo.env'
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/photoguard_demo/app.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --host 127.0.0.1 --port 7860 --root-path /photoguard
+ExecStopPost=+/bin/rm -rf /opt/dlami/nvme/facade-gradio /var/tmp/facade-gradio
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+LimitCORE=0
+UMask=0077
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=full
+# The code, venv and Node.js stay read-only even if this process is compromised.
+ReadOnlyPaths=/opt/facade
+
+[Install]
+WantedBy=multi-user.target

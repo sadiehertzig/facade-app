@@ -1,0 +1,34 @@
+# FACADE server: first-boot model fetch (installed by ../bootstrap.sh).
+# Downloads the pinned SD1.5-inpainting files listed in server/models/MODEL_SHA256SUMS,
+# verifies every sha256, publishes /srv/facade/models/sd15-inpaint-8a4288
+# read-only in one rename, and writes .verified. Once .verified exists this
+# unit is skipped (a skipped condition does not fail units that Require it).
+[Unit]
+Description=FACADE model snapshot fetch (SD1.5 inpainting @ 8a4288, sha256-verified)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=!/srv/facade/models/sd15-inpaint-8a4288/.verified
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=HOME=/srv/facade/models/.hf-home
+Environment=XDG_CACHE_HOME=/srv/facade/models/.hf-home/cache
+Environment=HF_HOME=/srv/facade/models/.hf-home
+Environment=HF_HUB_DOWNLOAD_TIMEOUT=60
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStartPre=+/usr/bin/install -d -m 0755 /srv/facade/models
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/models/fetch_models.py --sums /opt/facade/src/server/models/MODEL_SHA256SUMS --dest /srv/facade/models/sd15-inpaint-8a4288
+ExecStartPost=/bin/rm -rf /srv/facade/models/.hf-home
+TimeoutStartSec=2h
+LimitCORE=0
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/srv/facade/models
+
+[Install]
+WantedBy=multi-user.target

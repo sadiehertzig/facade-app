@@ -1,0 +1,15 @@
+# Dependencies and build output (recreated by `npm ci` and `npm run build`)
+/node_modules/
+/.next/
+/out/
+/coverage/
+next-env.d.ts
+*.tsbuildinfo
+
+# Local settings and secrets. Only the empty template is committed.
+.env*
+!.env.example
+
+# Logs and OS files
+npm-debug.log*
+.DS_Store

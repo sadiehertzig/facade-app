@@ -1,0 +1,49 @@
+# FACADE server: the /v1 PhotoGuard encoder worker (server/worker/). The website
+# calls it on loopback, and Caddy also proxies https://$FACADE_HOST/v1/* here with
+# no basic auth: the worker's own bearer check protects it. Loopback only.
+# The hex64 bearer arrives on stdin from /etc/facade/worker.bearer (0400
+# facade:facade, written by bootstrap.sh from SSM /facade/prod/processor-token).
+# Every start runs a fresh 200-step CUDA smoke before reporting ready.
+[Unit]
+Description=FACADE PhotoGuard /v1 worker (127.0.0.1:8000)
+Requires=facade-models.service
+After=facade-models.service nvidia-persistenced.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=facade
+Group=facade
+WorkingDirectory=/opt/facade/src
+StandardInput=file:/etc/facade/worker.bearer
+StandardOutput=journal
+StandardError=journal
+Environment=HOME=/var/lib/facade
+Environment=HF_HOME=/var/lib/facade/hf-home
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=TQDM_DISABLE=1
+# nvidia-uvm: an unprivileged CUDA process under NoNewPrivileges cannot run the
+# setuid nvidia-modprobe that creates /dev/nvidia-uvm on first use, so cuInit
+# fails (999) after every reboot or stop/start. Create it as root first; the
+# leading "-" keeps a failure here (e.g. no nvidia-modprobe binary) non-fatal.
+ExecStartPre=-+/usr/bin/nvidia-modprobe -u -c=0
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/worker/facade_photoguard_service.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --bind 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+LimitCORE=0
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+# The code, venv and Node.js stay read-only even if this process is compromised.
+ReadOnlyPaths=/opt/facade
+
+[Install]
+WantedBy=multi-user.target

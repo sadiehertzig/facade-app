@@ -1,0 +1,14 @@
+// Copy this file to Local.xcconfig (same folder) and fill in your own values.
+// Local.xcconfig is ignored by git. You only need it to run on a real iPhone;
+// the simulator build works without it.
+
+// Your 10-character Apple developer team ID (Xcode > Settings > Accounts).
+DEVELOPMENT_TEAM =
+
+// A bundle identifier that is unique to you, for example com.yourname.facade.
+PRODUCT_BUNDLE_IDENTIFIER = com.yourname.facade
+
+// Optional: show the "Try full PhotoGuard on the web" link and point it at the
+// team server, e.g. https://<server host>/ (ask whoever runs the server).
+// Write "/$()/" for the two slashes; a plain "//" would start a comment.
+// FACADE_WEBSITE_URL = https:/$()/facade.example.org/

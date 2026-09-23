@@ -1,0 +1,22 @@
+# FACADE server: one health probe (run by facade-health.timer every 60 s).
+# Loopback website (127.0.0.1:3000), loopback Gradio (127.0.0.1:7860/photoguard/),
+# loopback /v1/capabilities with the bearer, plus the public
+# https://$FACADE_HOST/v1/capabilities through Caddy/TLS. One JSON line to
+# journald: journalctl -u facade-health -n 5. Uses the system python (stdlib
+# only) so it still reports when the venv is broken.
+[Unit]
+Description=FACADE health check (web, demo, worker, public /v1)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=facade
+Group=facade
+EnvironmentFile=-/etc/facade/host.env
+ExecStart=/usr/bin/python3 /opt/facade/src/server/health.py --bearer-file /etc/facade/worker.bearer
+TimeoutStartSec=90
+LimitCORE=0
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict

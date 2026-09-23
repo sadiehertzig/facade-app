@@ -1,0 +1,12 @@
+# FACADE server: run facade-health.service every 60 s.
+[Unit]
+Description=FACADE health check every 60 s
+
+[Timer]
+OnBootSec=120
+OnUnitActiveSec=60
+AccuracySec=5
+Unit=facade-health.service
+
+[Install]
+WantedBy=timers.target
