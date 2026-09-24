@@ -1,15 +1,30 @@
 # Models (not in git)
 
 The FACADE app runs its models on the phone, but **no model files are stored in
-this repository**. Some are derived from models whose licences allow research use
-only, and all of them are large. The project owner keeps the verified copies and
-shares them privately with teammates who need them. Please do not commit them,
-upload them anywhere, or send them on.
+git**. Some are derived from models whose licences allow research use only, and
+all of them are large. The project owner keeps the verified copies and shares
+them with teammates through a private release of this repository (see below).
+Please do not commit them, upload them anywhere, or send them on.
 
 The app builds and runs without any of these files. Each feature that needs a
 missing model tells you so in the app ("FACADE models are not installed",
 "Mini PhotoGuard · unavailable in this build", or a Face-Off error), instead of
 doing anything else.
+
+## Download them
+
+If you have been invited to this repository, get them from the private
+[`models-v1` release](https://github.com/sadiehertzig/facade-app/releases/tag/models-v1)
+(1.15 GB). From the repository root:
+
+```bash
+gh release download models-v1 -R sadiehertzig/facade-app -p FACADE-Models-v1.zip -D ~/Downloads
+unzip -oq ~/Downloads/FACADE-Models-v1.zip -d app/ios/Models
+(cd app/ios/Models && shasum -a 256 -c --quiet MODEL_SHA256SUMS && echo "models OK")
+```
+
+This puts every folder in the table below in place, plus `MODEL_SHA256SUMS`
+(git ignores both). If the check prints a `FAILED` line, download again.
 
 ## Where the files go
 
