@@ -86,7 +86,7 @@ app/ios/
   FACADE/
     App/                 Swift source: screens, view models and the engines
     Native/              C and C++ code, reached from Swift as the CNative module
-    Resources/           asset catalog (the app icon slot is empty for now)
+    Resources/           asset catalog: the app icon and the navy accent colour
     Config/              Base.xcconfig, Local.xcconfig.example, Info.plist,
                          PrivacyInfo.xcprivacy, FACADE.entitlements
   FACADEKit/             local Swift package: model-manifest checks and the

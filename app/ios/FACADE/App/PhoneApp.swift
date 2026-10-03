@@ -9,7 +9,7 @@ import SwiftUI
                 HelpScreen()
                     .tabItem { Label("Get Help", systemImage: "heart.text.square") }
             }
-            .tint(Color.facadeViolet)
+            .tint(Color.facadeNavy)
             .preferredColorScheme(.light)
         }
     }

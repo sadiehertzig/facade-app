@@ -155,9 +155,9 @@ struct FACADEDemoScreen: View {
             }
             Spacer(minLength: 6)
             Label("On device", systemImage: "lock.fill").font(.caption2.weight(.bold)).textCase(.uppercase)
-                .foregroundStyle(Color.facadeMint)
+                .foregroundStyle(Color.facadeNavy)
                 .padding(.horizontal, 10).padding(.vertical, 7)
-                .background(Color.facadeMint.opacity(0.12), in: Capsule())
+                .background(Color.facadeSkyTint, in: Capsule())
         }.foregroundStyle(Color.facadeText)
         .accessibilityElement(children: .combine)
     }
@@ -168,7 +168,7 @@ struct FACADEDemoScreen: View {
                 .font(.title.weight(.bold)).foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
             Text("FACADE makes small, careful changes to your photo that are designed to confuse AI face-swap tools. You keep the original.")
-                .font(.subheadline).foregroundStyle(.white.opacity(0.88))
+                .font(.subheadline).foregroundStyle(Color.facadeSkyTint)
                 .fixedSize(horizontal: false, vertical: true)
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 8) { introPills }
@@ -193,12 +193,12 @@ struct FACADEDemoScreen: View {
     private func pill(_ text: String, systemImage: String) -> some View {
         Label(text, systemImage: systemImage).font(.caption.weight(.semibold)).foregroundStyle(.white)
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(.white.opacity(0.16), in: Capsule())
+            .background(.white.opacity(0.14), in: Capsule())
     }
 
     private var savedCard: some View {
         HStack(alignment: .top, spacing: 14) {
-            IconBadge(systemImage: "checkmark.seal.fill", tint: .facadeMint)
+            IconBadge(systemImage: "checkmark.circle.fill")
             VStack(alignment: .leading, spacing: 6) {
                 Text("Protected copy saved").font(.headline)
                 Text("A new PNG is in your Photos library. Your original is unchanged. Share the protected copy instead of the original.")
@@ -215,7 +215,7 @@ struct FACADEDemoScreen: View {
                 Text("I have permission to use this photo, and everyone shown is a consenting adult.")
                     .font(.footnote).fixedSize(horizontal: false, vertical: true)
             }
-            .tint(Color.facadeViolet)
+            .tint(Color.facadeNavy)
             .padding(12)
             .background(Color.facadeSurfaceRaised.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             PhotosPicker(selection: $importedItem, matching: .images) {
@@ -234,9 +234,9 @@ struct FACADEDemoScreen: View {
             Divider()
             Button { cancelPendingImport(); model.prepareSampleForReview() } label: {
                 Label("No photo handy? Try a fictional sample", systemImage: "sparkles")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.subheadline.weight(.semibold)).underline()
                     .frame(maxWidth: .infinity, minHeight: 44)
-            }.buttonStyle(.plain).foregroundStyle(Color.facadeViolet)
+            }.buttonStyle(.plain).foregroundStyle(Color.facadeNavy)
         }.fastCard()
     }
 
@@ -268,14 +268,14 @@ struct FACADEDemoScreen: View {
                 }
                 Spacer(minLength: 8)
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.title3).foregroundStyle(selected ? Color.facadeViolet : Color.facadeHairline)
+                    .font(.title3).foregroundStyle(selected ? Color.facadeNavy : Color.facadeOutline)
                     .accessibilityHidden(true)
             }
             .padding(12)
-            .background(selected ? Color.facadeViolet.opacity(0.06) : Color.clear,
+            .background(selected ? Color.facadeSkyTint : Color.clear,
                         in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(selected ? Color.facadeViolet : Color.facadeHairline, lineWidth: selected ? 1.5 : 1))
+                .strokeBorder(selected ? Color.facadeNavy : Color.facadeOutline, lineWidth: selected ? 1.5 : 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -299,10 +299,10 @@ struct FACADEDemoScreen: View {
             StepTitle(number: 3, title: "Protecting with \(model.selectedMethod.title)")
             HStack(spacing: 16) {
                 Image(systemName: "shield.lefthalf.filled")
-                    .font(.system(size: 34, weight: .semibold)).foregroundStyle(Color.facadeViolet)
+                    .font(.system(size: 34, weight: .semibold)).foregroundStyle(Color.facadeNavy)
                     .symbolEffect(.pulse, options: .repeating)
                     .frame(width: 64, height: 64)
-                    .background(Color.facadeViolet.opacity(0.1), in: Circle())
+                    .background(Color.facadeNavy.opacity(0.1), in: Circle())
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(model.progressText).font(.headline)
@@ -311,7 +311,7 @@ struct FACADEDemoScreen: View {
                     Text(elapsedText).font(.subheadline.monospacedDigit()).foregroundStyle(Color.facadeMuted)
                 }
             }
-            ProgressView().progressViewStyle(.linear).tint(Color.facadeViolet)
+            ProgressView().progressViewStyle(.linear).tint(Color.facadeNavy)
             Label("Keep FACADE open until it finishes. Leaving the app stops processing and clears the photo.", systemImage: "exclamationmark.circle")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -330,13 +330,17 @@ struct FACADEDemoScreen: View {
     private func resultCard(_ result: LivePhotoResult) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 12) {
-                IconBadge(systemImage: "checkmark.shield.fill", tint: .facadeMint)
+                // The half-lit shield means partial protection; never a checkmark or green here.
+                IconBadge(systemImage: "shield.lefthalf.filled")
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Your protected copy is ready").font(.headline)
                     Text("\(model.resultMethod.title) · \(String(format: "%.1f", result.elapsedSeconds)) s · \(result.width) × \(result.height) PNG")
                         .font(.caption).foregroundStyle(Color.facadeMuted)
                 }
             }
+            Label("Protection is experimental. No method can guarantee that an image cannot be misused.", systemImage: "info.circle")
+                .font(.footnote).foregroundStyle(Color.facadeText)
+                .fixedSize(horizontal: false, vertical: true)
             if !dynamicTypeSize.isAccessibilitySize,
                let original = UIImage(data: result.originalPNG), let protected = UIImage(data: result.protectedPNG) {
                 ComparisonSlider(original: original, protected: protected)
@@ -354,23 +358,20 @@ struct FACADEDemoScreen: View {
                         photo(metrics.deltaPNG, title: "Pixel difference · amplified ×16")
                         Text("The difference is amplified for visibility. It is not an image of protection strength.")
                             .font(.caption).foregroundStyle(Color.facadeMuted)
-                        LabeledContent("Largest channel change", value: "\(metrics.maximumChange) / 255")
-                        LabeledContent("RMS pixel change", value: String(format: "%.2f / 255", metrics.rmsChange))
-                        LabeledContent("PSNR", value: metrics.psnr.isFinite ? String(format: "%.2f dB", metrics.psnr) : "Identical pixels")
+                        detailRow("Largest channel change", "\(metrics.maximumChange) / 255")
+                        detailRow("RMS pixel change", String(format: "%.2f / 255", metrics.rmsChange))
+                        detailRow("PSNR", metrics.psnr.isFinite ? String(format: "%.2f dB", metrics.psnr) : "Identical pixels")
                         Text("These measure pixel differences, not protection effectiveness.")
                             .font(.caption).foregroundStyle(Color.facadeMuted)
                     } else if metricFailure {
-                        Text("Pixel details are unavailable. The original and protected previews remain available.")
+                        StatusBanner(kind: .info, message: "Pixel details are unavailable. The original and protected previews remain available.")
                     } else { ProgressView("Calculating pixel details") }
                     Divider()
-                    LabeledContent("Preparation", value: String(format: "%.2f s", result.preparationSeconds))
-                    LabeledContent("Model loading", value: String(format: "%.2f s", result.loadSeconds))
-                    LabeledContent("Protection engine", value: String(format: "%.2f s", result.pipelineSeconds))
+                    detailRow("Preparation", String(format: "%.2f s", result.preparationSeconds))
+                    detailRow("Model loading", String(format: "%.2f s", result.loadSeconds))
+                    detailRow("Protection engine", String(format: "%.2f s", result.pipelineSeconds))
                 }.font(.footnote).padding(.top, 12)
-            }.font(.subheadline.weight(.semibold)).tint(Color.facadeViolet)
-            Label("Protection is experimental. No method can guarantee that an image cannot be misused.", systemImage: "info.circle")
-                .font(.footnote).foregroundStyle(Color.facadeMuted)
-                .fixedSize(horizontal: false, vertical: true)
+            }.font(.subheadline.weight(.semibold)).tint(Color.facadeNavy)
         }.fastCard()
         .task(id: result.protectedPNG) {
             metrics = nil; metricFailure = false
@@ -401,8 +402,8 @@ struct FACADEDemoScreen: View {
 
     private var miniResultNotice: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Mini PhotoGuard is very experimental", systemImage: "info.circle")
-                .font(.headline).foregroundStyle(Color.facadeAmber)
+            Label("Mini PhotoGuard is very experimental", systemImage: "exclamationmark.triangle.fill")
+                .font(.headline).foregroundStyle(Color.facadeWarning)
             Text("It can visibly change image texture. Protection against AI clothing edits has not been demonstrated. The comparison above tests face swaps only.")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
             if let url = fullPhotoGuardURL {
@@ -443,16 +444,18 @@ struct FACADEDemoScreen: View {
                 Button { model.renderFaceOff(for: result) } label: {
                     Label("Run face-swap test", systemImage: "rectangle.on.rectangle")
                 }.buttonStyle(SecondaryButtonStyle()).disabled(model.busy)
-                if case .failed(let message) = model.faceOffState { Text(message).font(.footnote) }
+                if case .failed(let message) = model.faceOffState {
+                    StatusBanner(kind: StatusBanner.kind(for: message), message: message)
+                }
             case .rendering:
-                ProgressView("Rendering both face swaps").tint(Color.facadeViolet)
+                ProgressView("Rendering both face swaps").tint(Color.facadeNavy)
                 Button("Cancel test") { model.cancelProcessing() }.buttonStyle(SecondaryButtonStyle())
             case .ready:
                 let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
                 if let clean = model.faceOffUnprotectedFace, let protected = model.faceOffProtectedFace {
                     LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                        swapFace(clean, title: "Swap on original", match: model.faceOffUnprotectedMatch, tint: .facadeCoral)
-                        swapFace(protected, title: "Swap on protected", match: model.faceOffProtectedMatch, tint: .facadeMint)
+                        swapFace(clean, title: "Swap on original", match: model.faceOffUnprotectedMatch)
+                        swapFace(protected, title: "Swap on protected", match: model.faceOffProtectedMatch)
                     }
                     Text("Match to you: similarity of each swapped face to the original person, measured by the swap tool's own face recognizer. Higher values mean more similar to this recognizer, not proof of identity or protection.")
                         .font(.caption).foregroundStyle(Color.facadeMuted)
@@ -469,7 +472,7 @@ struct FACADEDemoScreen: View {
                             photo(clean, title: "Swap on original")
                             photo(protected, title: "Swap on protected")
                         }.padding(.top, 8)
-                    }.font(.footnote.weight(.semibold)).tint(Color.facadeViolet)
+                    }.font(.footnote.weight(.semibold)).tint(Color.facadeNavy)
                 }
                 if let seconds = model.faceOffRuntimeSeconds {
                     Text(String(format: "Both swaps ran on this iPhone in %.1f seconds.", seconds)).font(.caption).foregroundStyle(Color.facadeMuted)
@@ -478,7 +481,8 @@ struct FACADEDemoScreen: View {
         }.fastCard()
     }
 
-    private func swapFace(_ data: Data, title: String, match: Double?, tint: Color) -> some View {
+    /// Both scores use the same ink: colour must not suggest which result is "good".
+    private func swapFace(_ data: Data, title: String, match: Double?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             if let image = UIImage(data: data) {
                 Image(uiImage: image).resizable().interpolation(.high).scaledToFit()
@@ -488,7 +492,7 @@ struct FACADEDemoScreen: View {
             }
             Text(title).font(.caption.weight(.semibold)).foregroundStyle(Color.facadeMuted)
             if let match {
-                Text(String(format: "%.2f", match)).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(tint)
+                Text(String(format: "%.2f", match)).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(Color.facadeText)
                     .accessibilityLabel("Match to you \(String(format: "%.2f", match))")
                 Text("match to you").font(.caption2).foregroundStyle(Color.facadeMuted)
             }
@@ -498,18 +502,14 @@ struct FACADEDemoScreen: View {
     @ViewBuilder private var statusNote: some View {
         switch model.stage {
         case .blocked(let message):
-            VStack(alignment: .leading, spacing: 10) {
-                Label(message, systemImage: "exclamationmark.circle.fill")
-                    .font(.callout).foregroundStyle(Color.facadeAmber)
-                    .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 6) {
+                StatusBanner(kind: StatusBanner.kind(for: message), message: message)
                 if message.hasPrefix("The new copy was not saved"),
                    let settings = URL(string: UIApplication.openSettingsURLString) {
                     Button("Open Settings to allow Photos access") { UIApplication.shared.open(settings) }
                         .font(.footnote.weight(.semibold)).frame(minHeight: 44)
                 }
             }
-            .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.facadeAmber.opacity(0.1), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         default: EmptyView()
         }
     }
@@ -517,6 +517,7 @@ struct FACADEDemoScreen: View {
     private var privacyNote: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Private by design", systemImage: "lock.shield").font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.facadeText)
             Text("Photos stay on this device. Leaving the app clears the preview. Only Save adds a new copy to Photos.")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -528,7 +529,7 @@ struct FACADEDemoScreen: View {
                     benchmarkSummary
                     Button("Local data controls") { showingData = true }.frame(minHeight: 44)
                 }.padding(.top, 8)
-            }.font(.footnote).tint(Color.facadeViolet)
+            }.font(.footnote).tint(Color.facadeNavy)
         }.padding(.vertical, 6)
     }
 
@@ -538,6 +539,7 @@ struct FACADEDemoScreen: View {
     private var benchmarkSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("FACADE face-swap benchmarks").font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.facadeText)
             Text("Pairs meeting the test criterion, measured with an independent FaceNet recognizer.")
                 .foregroundStyle(Color.facadeMuted)
             benchmarkRow("Original PNG", simSwap: 176, inSwapper: 113)
@@ -558,7 +560,7 @@ struct FACADEDemoScreen: View {
 
     private func benchmarkRow(_ condition: String, simSwap: Int, inSwapper: Int) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(condition).font(.footnote.weight(.semibold))
+            Text(condition).font(.footnote.weight(.semibold)).foregroundStyle(Color.facadeText)
             let columns = Array(repeating: GridItem(.flexible(), alignment: .leading),
                                 count: dynamicTypeSize.isAccessibilitySize ? 1 : 2)
             LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
@@ -570,14 +572,23 @@ struct FACADEDemoScreen: View {
 
     private func benchmarkValue(_ engine: String, passes: Int) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(engine).font(.caption.weight(.semibold))
+            Text(engine).font(.caption.weight(.semibold)).foregroundStyle(Color.facadeText)
             Text(String(format: "%.1f%%", Double(passes) / 192 * 100))
-                .font(.headline).monospacedDigit()
+                .font(.headline).monospacedDigit().foregroundStyle(Color.facadeText)
             Text("\(passes)/192 pairs").font(.caption).monospacedDigit()
                 .foregroundStyle(Color.facadeMuted)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
+    }
+
+    /// A label in ink with its value in muted grey.
+    private func detailRow(_ label: String, _ value: String) -> some View {
+        LabeledContent {
+            Text(value).foregroundStyle(Color.facadeMuted)
+        } label: {
+            Text(label).foregroundStyle(Color.facadeText)
+        }
     }
 
     private func photo(_ data: Data, title: String) -> some View {
