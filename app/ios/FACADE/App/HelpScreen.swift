@@ -39,18 +39,16 @@ struct HelpScreen: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Get help").font(.largeTitle.weight(.bold))
-                        Text("What happened is not your fault.").font(.title3.weight(.semibold))
+                        Text("Get help").font(.largeTitle.weight(.bold)).foregroundStyle(Color.facadeText)
+                        Text("What happened is not your fault.").font(.title3.weight(.semibold)).foregroundStyle(Color.facadeText)
                         Text("You don't have to handle this alone. Free, confidential help is available, and you never need to show the image to FACADE.")
                             .foregroundStyle(Color.facadeMuted).fixedSize(horizontal: false, vertical: true)
                     }
-                    Label("If you are in immediate danger, call 911. For emotional support at any time, call or text 988.", systemImage: "phone.fill")
-                        .font(.footnote.weight(.semibold)).foregroundStyle(Color.facadeCoral)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.facadeCoral.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    // Calm and high-contrast. Red would read as "something failed".
+                    StatusBanner(kind: .urgentHelp,
+                                 message: "If you are in immediate danger, call 911. For emotional support at any time, call or text 988.")
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("What's happening?").font(.headline)
+                        Text("What's happening?").font(.headline).foregroundStyle(Color.facadeText)
                         Text("Choose what fits. We'll show you where to start.")
                             .font(.subheadline).foregroundStyle(Color.facadeMuted)
                         ForEach(helpSituations) { situation($0) }
@@ -63,7 +61,7 @@ struct HelpScreen: View {
                             Text("Fingerprint (hash) services work with participating platforms and can't guarantee removal everywhere. FACADE can't remove images already online.")
                             Text("Information checked September 22, 2026.").font(.caption)
                         }.font(.footnote).foregroundStyle(Color.facadeMuted).padding(.top, 8)
-                    }.font(.subheadline.weight(.semibold)).tint(Color.facadeViolet)
+                    }.font(.subheadline.weight(.semibold)).tint(Color.facadeNavy)
                 }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
             }.background(Color.facadeBackground).toolbar(.hidden, for: .navigationBar)
             .sheet(item: $browserResource) { item in
@@ -92,7 +90,7 @@ struct HelpScreen: View {
             .buttonStyle(.plain)
             .accessibilityValue(expanded ? "Expanded" : "Collapsed")
             if expanded {
-                Text(item.reassurance).font(.subheadline).foregroundStyle(Color.facadeMint)
+                Text(item.reassurance).font(.subheadline).foregroundStyle(Color.facadeText)
                     .fixedSize(horizontal: false, vertical: true)
                 ForEach(item.resources, id: \.0) { resource, reason in
                     resourceRow(resource, reason: reason)
@@ -103,12 +101,12 @@ struct HelpScreen: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.facadeSurface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .strokeBorder(expanded ? Color.facadeViolet : Color.facadeHairline, lineWidth: expanded ? 1.5 : 1))
+            .strokeBorder(expanded ? Color.facadeNavy : Color.facadeHairline, lineWidth: expanded ? 1.5 : 1))
     }
 
     private func resourceRow(_ item: FACADEHelpResource, reason: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(item.title).font(.subheadline.weight(.semibold))
+            Text(item.title).font(.subheadline.weight(.semibold)).foregroundStyle(Color.facadeText)
             Text(reason).font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
             openButton(item, label: "Open \(item.title)")
@@ -163,6 +161,10 @@ struct HelpBrowser: UIViewControllerRepresentable {
         let controller = SFSafariViewController(url: url)
         controller.delegate = context.coordinator
         controller.dismissButtonStyle = .done
+        if #unavailable(iOS 26) {
+            // iOS 26 ignores this setting (deprecated there); older versions get navy controls.
+            controller.preferredControlTintColor = UIColor(Color.facadeNavy)
+        }
         return controller
     }
 

@@ -2,20 +2,31 @@
 import SwiftUI
 import UIKit
 
-/// Light navy visual tokens for the FACADE interface.
+/// Midnight Harbor colour tokens: one navy and light-blue family shared with
+/// the app icon and the website. Every colour in the app comes from here.
 public extension Color {
-    static let facadeBackground = Color(red: 0.953, green: 0.961, blue: 0.976)
-    static let facadeSurface = Color(red: 1, green: 1, blue: 1)
-    static let facadeSurfaceRaised = Color(red: 0.906, green: 0.929, blue: 0.961)
-    static let facadeViolet = Color(red: 0.067, green: 0.165, blue: 0.29)
-    static let facadeVioletBright = Color(red: 0.122, green: 0.275, blue: 0.455)
-    static let facadeMint = Color(red: 0.047, green: 0.392, blue: 0.294)
-    static let facadeCoral = Color(red: 0.69, green: 0.176, blue: 0.153)
-    static let facadeAmber = Color(red: 0.502, green: 0.302, blue: 0.035)
-    static let facadeText = Color(red: 0.067, green: 0.122, blue: 0.204)
-    static let facadeMuted = Color(red: 0.318, green: 0.365, blue: 0.431)
-    static let facadeHairline = Color(red: 0.824, green: 0.847, blue: 0.882)
-    static let facadeHairlineBright = Color.white.opacity(0.14)
+    // Neutrals
+    static let facadeBackground = Color(red: 0.953, green: 0.961, blue: 0.976)   // #F3F5F9 page
+    static let facadeSurface = Color(red: 1, green: 1, blue: 1)                    // #FFFFFF cards
+    static let facadeSurfaceRaised = Color(red: 0.906, green: 0.929, blue: 0.961)  // #E7EDF5 pressed, disabled, insets
+    static let facadeText = Color(red: 0.067, green: 0.122, blue: 0.204)           // #111F34 ink
+    static let facadeMuted = Color(red: 0.318, green: 0.365, blue: 0.431)          // #515D6E secondary text
+    static let facadeHairline = Color(red: 0.824, green: 0.847, blue: 0.882)       // #D2D8E1 decorative borders only
+    static let facadeOutline = Color(red: 0.439, green: 0.486, blue: 0.561)        // #707C8F borders that show state
+
+    // Brand blues
+    static let facadeNavy = Color(red: 0.141, green: 0.294, blue: 0.573)           // #244B92 everything you tap
+    static let facadeMidnight = Color(red: 0.020, green: 0.031, blue: 0.271)       // #050845 the icon's background
+    static let facadeSkyTint = Color(red: 0.839, green: 0.910, blue: 0.988)        // #D6E8FC light-blue fills
+    static let facadeSky = Color(red: 0.651, green: 0.827, blue: 1)                // #A6D3FF only on navy or midnight
+
+    // States. Always shown with a glyph and words, never by colour alone.
+    // Success is never used on a protection result.
+    static let facadeSuccess = Color(red: 0.012, green: 0.439, blue: 0.384)        // #037062
+    static let facadeWarning = Color(red: 0.561, green: 0.322, blue: 0)            // #8F5200
+    static let facadeWarningFill = Color(red: 0.957, green: 0.933, blue: 0.902)    // #F4EEE6
+    static let facadeError = Color(red: 0.706, green: 0.180, blue: 0.322)          // #B42E52
+    static let facadeErrorFill = Color(red: 0.973, green: 0.918, blue: 0.933)      // #F8EAEE
 }
 
 /// Card presentation shared by every section of the demo screen.

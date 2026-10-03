@@ -14,6 +14,8 @@ CURRENT_PROJECT_VERSION = 2
 INFOPLIST_FILE = FACADE/Config/Info.plist
 GENERATE_INFOPLIST_FILE = NO
 ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+// Navy (#244B92) for system controls such as the photo picker and dialogs.
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
 
 // Web page opened by the "Try full PhotoGuard on the web" link. Empty here, so
 // the link is hidden. Set it in your Local.xcconfig, for example to the team
