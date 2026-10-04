@@ -1,26 +1,35 @@
 @import "tailwindcss";
 
-/* Colour and size tokens. The shadcn/ui components in components/ui read these. */
+/* The site is light only. Without this, OS dark mode would restyle the dark:
+   utilities inside the shadcn components. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Midnight Harbor colour tokens, shared with the iPhone app and the app icon.
+   The shadcn/ui components in components/ui read these. */
 :root {
-  --background: #f3f5fa;
-  --foreground: #172039;
-  --card: #fff;
-  --card-foreground: #172039;
-  --popover: #fff;
-  --popover-foreground: #172039;
-  --primary: #3155d9;
-  --primary-foreground: #fff;
-  --secondary: #edf1ff;
-  --secondary-foreground: #253d94;
-  --muted: #e9edf5;
-  --muted-foreground: #5c667b;
-  --accent: #e9eeff;
-  --accent-foreground: #203780;
-  --destructive: #ae293d;
-  --border: #dce2ee;
-  --input: #c9d2e4;
-  --ring: #5474ea;
+  color-scheme: light;
+  --background: #F3F5F9;          /* page */
+  --foreground: #111F34;          /* ink */
+  --card: #FFFFFF;
+  --card-foreground: #111F34;
+  --popover: #FFFFFF;
+  --popover-foreground: #111F34;
+  --primary: #244B92;             /* navy: everything you tap */
+  --primary-foreground: #FFFFFF;
+  --secondary: #D6E8FC;           /* sky tint fills */
+  --secondary-foreground: #244B92;
+  --muted: #E7EDF5;               /* pressed, disabled, insets */
+  --muted-foreground: #515D6E;    /* the one muted-text grey */
+  --accent: #D6E8FC;              /* hover fill for outline and ghost buttons */
+  --accent-foreground: #244B92;
+  --destructive: #B42E52;         /* error */
+  --border: #D2D8E1;              /* decorative hairlines */
+  --input: #707C8F;               /* borders that show state */
+  --ring: #335CD7;                /* keyboard focus */
   --radius: 0.75rem;
+  --brand-midnight: #050845;      /* the app icon's background */
+  --sky: #A6D3FF;                 /* only on navy or midnight */
+  --warning: #8F5200;
 }
 
 /* Expose the tokens to Tailwind classes such as bg-primary or border-input. */
@@ -47,8 +56,16 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: Arial, Helvetica, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Borders default to the hairline instead of the text colour. Utilities such as
+   border-input still win because they come later in the cascade. */
+@layer base {
+  *, ::before, ::after {
+    border-color: var(--border);
+  }
 }
 
 /* ---- Site styles ---- */
@@ -57,11 +74,49 @@
   box-sizing: border-box;
 }
 
+/* ---- Focus and control states (unlayered, so they beat Tailwind utilities) ---- */
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+[data-slot=button]:focus-visible, [data-slot=checkbox]:focus-visible, [data-slot=tabs-trigger]:focus-visible {
+  box-shadow: none;
+}
+
+[data-slot=tabs-trigger][data-state=inactive] {
+  color: var(--muted-foreground);
+}
+
+[data-slot=tabs-trigger][data-state=inactive]:hover {
+  color: var(--foreground);
+}
+
+[data-slot=button][data-variant=ghost] {
+  color: var(--primary);
+}
+
+/* A disabled primary button stays readable: grey fill, grey label, thin border. */
+[data-slot=button][data-variant=default]:disabled {
+  opacity: 1;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+/* Links inside running text are underlined; buttons and the nav are not. */
+.upload-consent a, .demo-note a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.55;
 }
@@ -108,7 +163,7 @@ svg {
   gap: 28px;
   padding: 0 5%;
   border-bottom: 1px solid var(--border);
-  background: #fff;
+  background: var(--card);
 }
 
 .brand {
@@ -125,8 +180,8 @@ svg {
   width: 33px;
   display: grid;
   place-items: center;
-  background: #1a274c;
-  color: #fff;
+  background: var(--brand-midnight);
+  color: var(--primary-foreground);
   border-radius: 6px;
   font-size: 26px;
   letter-spacing: 0;
@@ -144,7 +199,7 @@ svg {
 .research-tag {
   font-size: 13px;
   letter-spacing: .02em;
-  color: #697183;
+  color: var(--muted-foreground);
   border: 1px solid var(--border);
   padding: 6px 10px;
   border-radius: 5px;
@@ -169,7 +224,7 @@ svg {
   font-size: 12px;
   letter-spacing: .1em;
   font-weight: 700;
-  color: #5b6b96;
+  color: var(--primary);
   margin-bottom: 12px;
 }
 
@@ -182,7 +237,7 @@ svg {
 
 .heading-note {
   max-width: 380px;
-  color: #657086;
+  color: var(--muted-foreground);
   font-size: 16px;
   line-height: 1.65;
   margin-bottom: 3px;
@@ -195,7 +250,7 @@ svg {
 }
 
 .photo-panel {
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
@@ -220,16 +275,16 @@ svg {
 }
 
 .local-label {
-  color: #657086;
-  font-size: 12px;
+  color: var(--muted-foreground);
+  font-size: 13px;
   font-weight: 400;
 }
 
 .photo-stage {
   margin: 20px;
   min-height: 405px;
-  background: #f6f8fc;
-  border: 1px dashed #c5cfdf;
+  background: var(--background);
+  border: 1px dashed var(--input);
   border-radius: 10px;
   display: grid;
   place-items: center;
@@ -242,8 +297,8 @@ svg {
 }
 
 .upload-symbol {
-  color: #3155d9;
-  background: #e8eeff;
+  color: var(--primary);
+  background: var(--secondary);
   display: grid;
   place-items: center;
   width: 66px;
@@ -260,7 +315,7 @@ svg {
 
 .drop-content p {
   font-size: 15px;
-  color: #657086;
+  color: var(--muted-foreground);
   margin: 8px 0 24px;
 }
 
@@ -271,13 +326,13 @@ svg {
 
 .file-hint {
   display: block;
-  font-size: 12px;
-  color: #7b8597;
+  font-size: 13px;
+  color: var(--muted-foreground);
   margin-top: 14px;
 }
 
 .photo-stage.has-photo {
-  background: #172039;
+  background: var(--brand-midnight);
   border: 0;
   min-height: 405px;
 }
@@ -305,18 +360,18 @@ svg {
   padding: 0 24px 22px;
   gap: 12px;
   font-size: 13px;
-  color: #657086;
+  color: var(--muted-foreground);
 }
 
 .error-message {
   padding: 0 24px 20px;
-  color: #ae293d;
+  color: var(--destructive);
   font-size: 14px;
 }
 
 .options-panel {
   padding: 27px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
 }
@@ -333,8 +388,8 @@ svg {
 }
 
 .service-card {
-  border: 1px solid #6985e6;
-  background: #f5f7ff;
+  border: 1px solid var(--border);
+  background: var(--background);
   padding: 18px;
   border-radius: 10px;
 }
@@ -346,7 +401,7 @@ svg {
 }
 
 .service-title>svg {
-  color: #4a6098;
+  color: var(--primary);
 }
 
 .service-title strong {
@@ -357,13 +412,20 @@ svg {
 .service-card p {
   font-size: 14px;
   line-height: 1.55;
-  color: #657086;
+  color: var(--muted-foreground);
   margin: 10px 0;
 }
 
 .availability {
-  font-size: 12px;
-  color: #637293;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+
+.availability.is-offline {
+  color: var(--warning);
 }
 
 .action-area {
@@ -379,7 +441,7 @@ svg {
 .action-area p {
   font-size: 13px;
   line-height: 1.55;
-  color: #758096;
+  color: var(--muted-foreground);
   margin-top: 10px;
 }
 
@@ -390,7 +452,7 @@ svg {
   border-top: 1px solid var(--border);
   padding-top: 20px;
   margin-top: 22px;
-  color: #66718a;
+  color: var(--foreground);
   font-size: 13px;
 }
 
@@ -401,7 +463,7 @@ svg {
   gap: 24px;
   margin-top: 30px;
   padding: 25px 4px;
-  border-top: 1px solid #dce2ee;
+  border-top: 1px solid var(--border);
 }
 
 .support-strip strong {
@@ -411,7 +473,7 @@ svg {
 
 .support-strip p {
   font-size: 14px;
-  color: #69748a;
+  color: var(--muted-foreground);
   margin-top: 4px;
 }
 
@@ -426,15 +488,15 @@ footer {
   gap: 24px;
   justify-content: space-between;
   padding: 22px 5%;
-  font-size: 12px;
-  color: #788296;
+  font-size: 13px;
+  color: var(--muted-foreground);
   border-top: 1px solid var(--border);
 }
 
 .footer-brand {
   letter-spacing: .18em;
   font-weight: 700;
-  color: #485673;
+  color: var(--foreground);
 }
 
 .text-heading {
@@ -444,7 +506,7 @@ footer {
 
 .text-heading>p:last-child {
   font-size: 17px;
-  color: #69748a;
+  color: var(--muted-foreground);
   margin-top: 20px;
   max-width: 590px;
 }
@@ -457,7 +519,7 @@ footer {
 
 .resource-card, .explanation-card {
   padding: 30px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
@@ -470,7 +532,7 @@ footer {
 }
 
 .resource-card p:not(.eyebrow), .explanation-card p, .research-disclosure p {
-  color: #637087;
+  color: var(--muted-foreground);
   line-height: 1.7;
   font-size: 16px;
 }
@@ -481,7 +543,9 @@ footer {
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #3155d9;
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
   margin-top: 22px;
 }
 
@@ -493,13 +557,13 @@ footer {
 
 .resource-footnote {
   font-size: 14px;
-  color: #657086;
+  color: var(--muted-foreground);
   max-width: 850px;
   margin: 24px 0;
 }
 
 .explanation-card>svg {
-  color: #3155d9;
+  color: var(--primary);
 }
 
 .research-disclosure {
@@ -571,9 +635,6 @@ footer {
     width: 29px;
     font-size: 23px;
   }
-  .research-tag {
-    font-size: 12px;
-  }
   .site-nav {
     gap: 20px!important;
   }
@@ -604,7 +665,6 @@ footer {
   }
   .photo-caption {
     padding: 0 15px 17px;
-    font-size: 12px;
   }
   .options-panel {
     padding: 21px;
@@ -661,11 +721,11 @@ footer {
 .mask-instructions {
   padding: 0 24px 24px;
   font-size: 14px;
-  color: #657086;
+  color: var(--muted-foreground);
 }
 
 .mask-instructions strong {
-  color: #172039;
+  color: var(--foreground);
 }
 
 .mask-instructions p {
@@ -681,7 +741,7 @@ footer {
   align-items: flex-start;
   gap: 10px;
   font-size: 14px;
-  color: #536079;
+  color: var(--muted-foreground);
   margin-bottom: 18px;
 }
 
@@ -700,9 +760,16 @@ footer {
   margin-bottom: 12px;
 }
 
+.job-panel.is-failed h3 {
+  color: var(--destructive);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .job-panel p {
   font-size: 14px;
-  color: #657086;
+  color: var(--muted-foreground);
   line-height: 1.6;
   margin: 12px 0;
 }
@@ -724,7 +791,7 @@ footer {
 
 .results-intro {
   max-width: 850px;
-  color: #536079;
+  color: var(--muted-foreground);
   font-size: 16px;
   line-height: 1.7;
 }
@@ -732,7 +799,7 @@ footer {
 .results-panel {
   margin-top: 24px;
   padding: 28px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 14px;
 }
@@ -745,7 +812,7 @@ footer {
 
 .results-panel>p, .results-next p {
   font-size: 16px;
-  color: #536079;
+  color: var(--muted-foreground);
   line-height: 1.7;
 }
 
@@ -756,17 +823,18 @@ footer {
 .results-panel th, .results-panel td {
   font-size: 15px;
   padding: 14px 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .results-panel caption {
   text-align: left;
   font-size: 14px;
   line-height: 1.6;
-  color: #536079;
+  color: var(--muted-foreground);
 }
 
-.results-panel .results-limit {
-  font-size: 14px;
+/* The caveat keeps the 16px body size. */
+.results-limit {
   margin-top: 18px;
   border-top: 1px solid var(--border);
   padding-top: 16px;
@@ -801,19 +869,19 @@ footer {
   margin-top: 22px;
   padding: 14px 16px;
   border-radius: 10px;
-  background: #f6f8fc;
-  color: #536079;
+  background: var(--background);
+  color: var(--muted-foreground);
   font-size: 13px;
   line-height: 1.55;
 }
 
 .app-note strong {
-  color: #172039;
+  color: var(--foreground);
   font-weight: 600;
 }
 
 .app-note>svg {
-  color: #4a6098;
+  color: var(--primary);
 }
 
 /* ---- Full PhotoGuard demo card (Prepare tab) ---- */
@@ -824,14 +892,14 @@ footer {
   gap: 24px;
   margin-top: 24px;
   padding: 28px;
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 16px;
 }
 
 .demo-icon {
-  color: #3155d9;
-  background: #e8eeff;
+  color: var(--primary);
+  background: var(--secondary);
   display: grid;
   place-items: center;
   width: 58px;
@@ -846,6 +914,7 @@ footer {
 
 .demo-text .eyebrow {
   margin-bottom: 6px;
+  color: var(--primary);
 }
 
 .demo-text h2 {
@@ -857,14 +926,14 @@ footer {
 
 .demo-text p {
   font-size: 15px;
-  color: #536079;
+  color: var(--muted-foreground);
   line-height: 1.65;
   max-width: 760px;
 }
 
 .demo-text .demo-note {
   font-size: 13px;
-  color: #69748a;
+  color: var(--muted-foreground);
   margin-top: 8px;
 }
 
@@ -876,14 +945,14 @@ footer {
   height: 44px;
   padding: 0 20px;
   border-radius: calc(var(--radius) - 2px);
-  background: #3155d9;
-  color: #fff;
+  background: var(--primary);
+  color: var(--primary-foreground);
   font-size: 14px;
   font-weight: 600;
 }
 
 .demo-link:hover {
-  background: #2847bb;
+  background: var(--brand-midnight);
 }
 
 .research-disclosure a {
@@ -916,7 +985,7 @@ footer {
   width: 132px;
   height: 132px;
   padding: 8px;
-  background: #fff;
+  background: #FFFFFF; /* the QR quiet zone stays white */
   border: 1px solid var(--border);
   border-radius: 12px;
 }

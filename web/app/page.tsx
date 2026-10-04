@@ -12,7 +12,8 @@ import { OPENRAIL_LICENSE_URL } from "@/lib/protection-recipe";
 
 // The full PhotoGuard demo (server/photoguard_demo) is a separate Gradio app.
 // On the server, Caddy sends /photoguard/ to it; it is not part of this Next.js app.
-const PHOTOGUARD_DEMO_URL = "/photoguard/";
+// ?__theme=light keeps Gradio in light mode to match this site.
+const PHOTOGUARD_DEMO_URL = "/photoguard/?__theme=light";
 
 // Public TestFlight link for the iPhone beta (FACADE Photo Shield on App Store Connect).
 const TESTFLIGHT_URL = "https://testflight.apple.com/join/dxMRcMkd";
@@ -135,7 +136,7 @@ export default function Home() {
               <Cloud size={28} />
               <h2>PhotoGuard encoder online</h2>
               <p>
-                This website sends a 512 × 512 crop to the team’s private GPU server. The server runs the encoder method from
+                This website sends a 512&nbsp;×&nbsp;512 crop to the team’s private GPU server. The server runs the encoder method from
                 PhotoGuard’s official demo for 200 optimization steps, then returns a PNG. This is distinct from PhotoGuard’s heavier
                 diffusion attack.
               </p>

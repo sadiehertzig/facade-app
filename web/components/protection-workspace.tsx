@@ -5,7 +5,7 @@
 // crop to the PhotoGuard worker through /api/processing.
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { Cloud, Download, ImageIcon, LockKeyhole, ShieldCheck, Smartphone, Upload, X } from "lucide-react";
+import { Cloud, Download, ImageIcon, Info, LockKeyhole, OctagonAlert, Smartphone, TriangleAlert, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -316,7 +316,7 @@ export function ProtectionWorkspace() {
             <ImageIcon size={18} /> Your photo
           </span>
           <span className="local-label">
-            <LockKeyhole size={14} /> {job ? "Online job" : "Local preview"}
+            {job ? <Cloud size={14} /> : <LockKeyhole size={14} />} {job ? "Online job" : "Local preview"}
           </span>
         </div>
 
@@ -369,6 +369,7 @@ export function ProtectionWorkspace() {
           <input
             ref={input}
             type="file"
+            tabIndex={-1}
             className="sr-only"
             accept="image/jpeg,image/png"
             aria-label="Choose photo"
@@ -381,7 +382,7 @@ export function ProtectionWorkspace() {
         </div>
 
         <div className="photo-caption">
-          <span>{file ? "512 × 512 center crop. Only this crop is processed." : "Use a photo you own or have permission to use."}</span>
+          <span>{file ? "512\u00a0×\u00a0512 center crop. Only this crop is processed." : "Use a photo you own or have permission to use."}</span>
           {file && (
             <Button variant="ghost" disabled={locked} onClick={() => input.current?.click()}>
               Change photo
@@ -422,17 +423,21 @@ export function ProtectionWorkspace() {
             <strong>Team GPU server</strong>
           </div>
           <p>
-            Runs PhotoGuard&apos;s encoder method on the 512 × 512 crop, on the FACADE team&apos;s private GPU server. Only the crop and
+            Runs PhotoGuard&apos;s encoder method on the 512&nbsp;×&nbsp;512 crop, on the FACADE team&apos;s private GPU server. Only the crop and
             your marked area are sent, without the filename or photo metadata.
           </p>
-          <span className="availability">
+          <span className={"availability" + (!checking && !ready ? " is-offline" : "")}>
+            {!checking && !ready && <TriangleAlert size={14} aria-hidden />}
             {checking ? "Checking availability…" : ready ? "PhotoGuard encoder available" : "The GPU server is offline right now"}
           </span>
         </div>
 
         {job ? (
-          <div className="job-panel" aria-live="polite">
-            <h3>{jobHeading(job.status)}</h3>
+          <div className={"job-panel" + (job.status === "failed" ? " is-failed" : "")} aria-live="polite">
+            <h3>
+              {job.status === "failed" && <OctagonAlert size={18} aria-hidden />}
+              {jobHeading(job.status)}
+            </h3>
             <Progress value={(100 * job.iteration) / job.total_iterations} aria-label="Processing steps" />
             <p>
               {job.iteration} of {job.total_iterations} steps. This measures work completed, not protection strength.
@@ -492,7 +497,7 @@ export function ProtectionWorkspace() {
         </div>
 
         <div className="honest-note">
-          <ShieldCheck size={20} />
+          <Info size={20} />
           <p>Protection is experimental. Neither method is guaranteed to prevent editing or misuse.</p>
         </div>
       </aside>
