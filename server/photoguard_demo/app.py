@@ -125,9 +125,33 @@ CLEAR_RESULTS_JS = """
 }
 """
 
+# Midnight Harbor colours, shared with the FACADE app and website. The variable block overrides
+# Soft's light theme only: Gradio puts .dark on <body> in dark mode, and it then does not apply.
+# Theme variables that Soft derives from others (e.g. --block-title-background-fill) are resolved
+# at :root, so each one used on this page is set here directly. The two rules after the block
+# apply in both modes: underline spacing and an undimmed notice.
 CSS = """
+body:not(.dark), body:not(.dark) .gradio-container {
+  /* Gradio's own page colours behind the app, seen when the page bounces. The -dark pair is
+     what a device in dark mode uses even after ?__theme=light, so it is set here too. */
+  --bg: #F3F5F9; --bg-dark: #F3F5F9; --col: #111F34; --col-dark: #111F34;
+  --body-background-fill: #F3F5F9; --body-text-color: #111F34; --body-text-color-subdued: #515D6E;
+  --color-accent: #244B92; --color-accent-soft: #D6E8FC;
+  --button-primary-background-fill: #244B92; --button-primary-background-fill-hover: #050845;
+  --button-primary-text-color: #FFFFFF; --button-primary-text-color-hover: #FFFFFF;
+  --button-secondary-background-fill: #D6E8FC; --button-secondary-background-fill-hover: #E7EDF5;
+  --button-secondary-text-color: #244B92; --button-secondary-text-color-hover: #244B92;
+  --block-label-background-fill: #D6E8FC; --block-label-text-color: #244B92;
+  --block-title-background-fill: #D6E8FC; --block-title-text-color: #244B92;
+  --block-info-text-color: #515D6E; --accordion-text-color: #111F34; --border-color-accent: #D6E8FC;
+  --link-text-color: #244B92; --link-text-color-hover: #050845;
+  --link-text-color-visited: #244B92; --link-text-color-active: #244B92;
+  --slider-color: #244B92; --checkbox-background-color-selected: #244B92; --loader-color: #244B92;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.gradio-container a { text-decoration: underline; text-underline-offset: 2px; }
 #pg-results { min-height: 280px; }
-.pg-note { font-size: 0.9em; opacity: 0.85; }
+.pg-note { font-size: 0.9em; }
 @media (max-width: 640px) {
   .pg-title { font-size: 1.6rem !important; }
   /* Phones: one result per row, full width, instead of three thumbnails. */
