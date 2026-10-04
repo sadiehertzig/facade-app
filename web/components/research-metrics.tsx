@@ -63,7 +63,7 @@ export function ResearchMetrics() {
       <div className="results-next">
         <h3>PhotoGuard on this website</h3>
         <p>
-          The 512 × 512, 200-step PhotoGuard encoder runs on the team’s private GPU server. A finished run shows that the service
+          The 512&nbsp;×&nbsp;512, 200-step PhotoGuard encoder runs on the team’s private GPU server. A finished run shows that the service
           works; it does not show that a particular edit is blocked. The full PhotoGuard demo lets you compare an AI edit of the
           original with the same edit of the protected image. We have not yet measured how often it stops clothing edits.
         </p>
