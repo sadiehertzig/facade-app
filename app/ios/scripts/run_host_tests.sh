@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs the app's small standalone tests on your Mac (no simulator, no models).
+# Runs the app's small standalone tests on your Mac (no simulator; only the last,
+# optional test needs a private model and is skipped without it).
 # Each test compiles a few app source files together with a test file that has
 # its own main(), then runs it. A non-zero exit means a test failed.
 #
@@ -28,6 +29,17 @@ run mini-photoguard -D MINI_PHOTOGUARD_STANDALONE_TEST \
 run photo-preparation -I "$IOS_DIR/FACADE/Native/include" \
   "$TESTS/LivePhotoPreparationTest.swift" "$TESTS/LivePhotoPreparationStubs.swift" \
   "$APP/LivePhotoEngine.swift" "$APP/NativeImageIO.swift" "$APP/NativeSchedule.swift"
+
+# Needs the private Mini PhotoGuard model (app/ios/Models/README.md); skipped without it.
+MODELS="$IOS_DIR/Models"
+if [ -d "$MODELS/photoguard_encoder_gradient_256_fp32.mlpackage" ] && [ -f "$MODELS/MiniPhotoGuardPayload/fixture_input_f32.bin" ]; then
+  echo "==> mini-photoguard-model"
+  xcrun swiftc -parse-as-library -O -D MINI_PHOTOGUARD_MODEL_TEST \
+    "$TESTS/MiniPhotoGuardModelTests.swift" "$APP/MiniPhotoGuardEngine.swift" -o "$OUT/mini-photoguard-model"
+  "$OUT/mini-photoguard-model" "$MODELS"
+else
+  echo "==> mini-photoguard-model: skipped (Mini PhotoGuard model not installed)"
+fi
 
 echo
 echo "All host tests passed."

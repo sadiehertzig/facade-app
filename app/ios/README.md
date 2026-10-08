@@ -76,7 +76,9 @@ app/ios/scripts/run_host_tests.sh
 
 They cover the pixel-difference display, Mini PhotoGuard's image preparation
 and pixel limits, and FACADE's photo preparation (all eight photo
-orientations).
+orientations). If the private Mini PhotoGuard model is in `Models/`, one more
+test loads it on your Mac to check how its outputs are read and how the compiled
+model is cached; without the model that test is skipped.
 
 ## How the project is organized
 

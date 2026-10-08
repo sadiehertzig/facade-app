@@ -9,7 +9,8 @@ import Darwin
 // Experimental encoder-only PhotoGuard adapter. This is the frozen 256 FP32
 // gray-latent objective, not the full diffusion method or a face verifier.
 // Caller must serialize this actor with all other heavy model engines and join
-// cancellation before starting another engine. No model survives a run.
+// cancellation before starting another engine. No loaded model survives a run;
+// only the compiled model files are kept on disk for reuse (see below).
 enum MiniPhotoGuardError: LocalizedError {
     case invalid(String)
     var errorDescription: String? { if case .invalid(let message) = self { return message }; return nil }
@@ -155,6 +156,127 @@ enum MiniPhotoGuardPixels {
     }
 }
 
+// Reads a Core ML output as [Float]. A float32 array laid out in contiguous
+// row-major order is copied in bulk; that yields the same IEEE bits as the
+// per-element NSNumber read, which remains the path for every other layout.
+enum MiniPhotoGuardOutput {
+    static func contiguousStrides(_ shape: [Int]) -> [Int] {
+        var strides = [Int](repeating: 1, count: shape.count)
+        var running = 1
+        for axis in shape.indices.reversed() { strides[axis] = running; running *= shape[axis] }
+        return strides
+    }
+    static func isContiguousFloat32(_ array: MLMultiArray) -> Bool {
+        array.dataType == .float32 && array.strides.map(\.intValue) == contiguousStrides(array.shape.map(\.intValue))
+    }
+    static func perElement(_ array: MLMultiArray) -> [Float] { (0..<array.count).map { array[$0].floatValue } }
+    static func bulk(_ array: MLMultiArray) -> [Float]? {
+        guard isContiguousFloat32(array) else { return nil }
+        let count = array.count
+        return array.withUnsafeBufferPointer(ofType: Float.self) { buffer -> [Float]? in
+            guard let base = buffer.baseAddress, buffer.count >= count else { return nil }
+            return Array(UnsafeBufferPointer(start: base, count: count))
+        }
+    }
+    static func floats(_ array: MLMultiArray) -> [Float] { bulk(array) ?? perElement(array) }
+}
+
+// Compiled-model cache. The bundled .mlpackage is compiled once per verified
+// model identity and OS build and kept in Caches (excluded from backup; iOS may
+// purge it when storage is low, which only costs one recompile); the stable
+// path also lets Core ML reuse its own device cache. Only a
+// complete compile is ever found under an identity folder: the compiler output
+// is staged beside it and renamed into place. A cache that fails to load is
+// deleted and rebuilt once. If the cache cannot be written, the run compiles to
+// a temporary folder that the caller deletes afterwards, as before.
+enum MiniPhotoGuardModelCache {
+    static let compiledName = "model.mlmodelc"
+    // `identity` names the compiled folder that was loaded; every compile gets a new one.
+    struct Loaded { let model: MLModel; let compiled: Bool; let temporary: URL?; let identity: String }
+
+    static func identity(_ url: URL) -> String {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: url.path)
+        let number = (attributes?[.systemFileNumber] as? NSNumber)?.uint64Value ?? 0
+        let created = (attributes?[.creationDate] as? Date)?.timeIntervalSinceReferenceDate.bitPattern ?? 0
+        return "\(url.path):\(number):\(created)"
+    }
+
+    static func root() -> URL? {
+        try? FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            .appendingPathComponent("MiniPhotoGuardCompiledModel", isDirectory: true)
+    }
+    static func folderName(manifestSHA: String, exportSHA: String, system: String) -> String {
+        let os = String(String.UnicodeScalarView(system.unicodeScalars.map {
+            ($0.isASCII && (CharacterSet.alphanumerics.contains($0) || $0 == ".")) ? $0 : "_" }))
+        return "\(manifestSHA.prefix(16))-\(exportSHA.prefix(16))-\(os)"
+    }
+    static func load(package: URL, folder: URL?, configuration: MLModelConfiguration,
+                     afterCompile: () throws -> Void) throws -> Loaded {
+        let files = FileManager.default
+        if let folder {
+            let cached = folder.appendingPathComponent(compiledName, isDirectory: true)
+            if files.fileExists(atPath: cached.path) {
+                if let model = try? MLModel(contentsOf: cached, configuration: configuration) {
+                    return Loaded(model: model, compiled: false, temporary: nil, identity: identity(cached))
+                }
+                try? files.removeItem(at: folder) // Unloadable cache: discard it and rebuild once.
+            }
+        }
+        let compiled = try MLModel.compileModel(at: package)
+        let published = folder.flatMap { publish(compiled, to: $0) }
+        let temporary = published == nil ? compiled : nil
+        do { try afterCompile() } catch {
+            if let temporary { try? files.removeItem(at: temporary) }
+            throw error
+        }
+        do {
+            let model = try MLModel(contentsOf: published ?? compiled, configuration: configuration)
+            return Loaded(model: model, compiled: true, temporary: temporary, identity: identity(published ?? compiled))
+        } catch {
+            if let temporary { try? files.removeItem(at: temporary) } else if let folder { try? files.removeItem(at: folder) }
+            throw error
+        }
+    }
+    // Returns the published model, or nil with the compiler output left in place.
+    private static func publish(_ compiled: URL, to folder: URL) -> URL? {
+        let files = FileManager.default
+        var root = folder.deletingLastPathComponent()
+        let staging = root.appendingPathComponent(".staging-" + UUID().uuidString, isDirectory: true)
+        let staged = staging.appendingPathComponent(compiledName, isDirectory: true)
+        do {
+            try files.createDirectory(at: root, withIntermediateDirectories: true)
+            var values = URLResourceValues(); values.isExcludedFromBackup = true
+            try root.setResourceValues(values)
+            // Earlier model identities or OS builds, and interrupted stagings.
+            for entry in try files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil) { try? files.removeItem(at: entry) }
+            try files.createDirectory(at: staging, withIntermediateDirectories: false)
+            try files.moveItem(at: compiled, to: staged)
+        } catch { try? files.removeItem(at: staging); return nil }
+        do { try files.moveItem(at: staging, to: folder) } catch { // Same-directory rename: all or nothing.
+            try? files.moveItem(at: staged, to: compiled)
+            try? files.removeItem(at: staging)
+            return nil
+        }
+        return folder.appendingPathComponent(compiledName, isDirectory: true)
+    }
+}
+
+// Once-per-install records in UserDefaults: digests of the build numbers, the
+// bundle and executable, and each bound file's size and modification date. A
+// mismatch only repeats the full check; a failed check never records anything.
+enum MiniPhotoGuardMarkers {
+    static let verifiedInstall = "MiniPhotoGuard.verifiedInstall.v1"
+    static let passedParity = "MiniPhotoGuard.passedParity.v1"
+    static func digest(_ parts: [String]) -> String {
+        SHA256.hash(data: Data(parts.joined(separator: "\n").utf8)).map { String(format: "%02x", $0) }.joined()
+    }
+    static func stamp(_ url: URL?) -> String {
+        guard let url, let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let size = attributes[.size] as? NSNumber, let date = attributes[.modificationDate] as? Date else { return "unavailable" }
+        return "\(size.int64Value):\(date.timeIntervalSinceReferenceDate.bitPattern)"
+    }
+}
+
 actor MiniPhotoGuardEngine {
     static let shared = MiniPhotoGuardEngine()
     private var busy = false
@@ -241,6 +363,10 @@ actor MiniPhotoGuardEngine {
         return url
     }
     private nonisolated static func payload(fullVerification: Bool) throws -> Payload {
+        try payload(full: { _ in fullVerification }).payload
+    }
+    // `full` receives this install's key and decides whether to hash every file.
+    private nonisolated static func payload(full: (String) -> Bool) throws -> (payload: Payload, install: String) {
         // The payload is private and not in git; see app/ios/Models/README.md.
         let root = Bundle.main.bundleURL.appendingPathComponent("MiniPhotoGuardPayload")
         guard let data = try? Data(contentsOf: root.appendingPathComponent("manifest.json")) else {
@@ -258,9 +384,18 @@ actor MiniPhotoGuardEngine {
             throw MiniPhotoGuardError.invalid("The miniPhotoGuard recipe differs from the verified model.")
         }
         let model = try safe(manifest.modelRelativePath, root: Bundle.main.bundleURL)
+        let info = Bundle.main.infoDictionary
+        var parts = [Bundle.main.bundleURL.path, MiniPhotoGuardMarkers.stamp(Bundle.main.executableURL),
+                     info?["CFBundleVersion"] as? String ?? "", info?["CFBundleShortVersionString"] as? String ?? "", frozenManifestSHA]
+        for binding in manifest.modelFiles { parts.append(binding.path + "=" + MiniPhotoGuardMarkers.stamp(try? safe(binding.path, root: model))) }
+        for (name, binding) in manifest.fixtures.sorted(by: { $0.key < $1.key }) {
+            parts.append(name + "=" + MiniPhotoGuardMarkers.stamp(try? safe(binding.path, root: root)))
+        }
+        let install = MiniPhotoGuardMarkers.digest(parts)
+        let fullVerification = full(install)
         for binding in manifest.modelFiles { _ = try verify(binding, root: model, full: fullVerification) }
         for binding in manifest.fixtures.values { _ = try verify(binding, root: root, full: fullVerification) }
-        return Payload(manifest: manifest, root: root, model: model)
+        return (Payload(manifest: manifest, root: root, model: model), install)
     }
     private nonisolated static func floats(_ binding: Binding, root: URL, count: Int) throws -> [Float] {
         let data = try Data(contentsOf: safe(binding.path, root: root))
@@ -278,7 +413,7 @@ actor MiniPhotoGuardEngine {
             func values(_ name: String, _ shape: [Int]) throws -> [Float] {
                 guard let array = output.featureValue(for: name)?.multiArrayValue, array.dataType == .float32,
                       array.shape.map(\.intValue) == shape else { throw MiniPhotoGuardError.invalid("Invalid model output: \(name).") }
-                let values = (0..<array.count).map { array[$0].floatValue }
+                let values = MiniPhotoGuardOutput.floats(array)
                 guard values.allSatisfy(\.isFinite) else { throw MiniPhotoGuardError.invalid("Nonfinite model output.") }
                 return values
             }
@@ -296,33 +431,49 @@ actor MiniPhotoGuardEngine {
             progress(LivePhotoProgress(stage: stage, step: step, totalSteps: 200, elapsedSeconds: control.elapsed))
         }
         try report("Checking miniPhotoGuard resources")
-        let checked = try payload(fullVerification: true)
+        // Every file is hashed on the first run of each installed build; later
+        // runs of the same signed, read-only install check sizes only.
+        let defaults = UserDefaults.standard
+        let (checked, install) = try payload(full: { defaults.string(forKey: MiniPhotoGuardMarkers.verifiedInstall) != $0 })
+        if defaults.string(forKey: MiniPhotoGuardMarkers.verifiedInstall) != install {
+            defaults.set(install, forKey: MiniPhotoGuardMarkers.verifiedInstall)
+        }
         try control.check()
         let manifest = checked.manifest
         let loadStart = control.elapsed
         try report("Loading miniPhotoGuard")
-        let compiled = try MLModel.compileModel(at: checked.model)
-        defer { try? FileManager.default.removeItem(at: compiled) } // Only this call's compiler output, never images.
-        try control.check()
         let configuration = MLModelConfiguration(); configuration.computeUnits = .cpuAndGPU
-        let model = try MLModel(contentsOf: compiled, configuration: configuration)
+        let system = ProcessInfo.processInfo.operatingSystemVersionString
+        let folder = MiniPhotoGuardModelCache.root()?.appendingPathComponent(
+            MiniPhotoGuardModelCache.folderName(manifestSHA: frozenManifestSHA, exportSHA: exportSHA, system: system), isDirectory: true)
+        let loaded = try MiniPhotoGuardModelCache.load(package: checked.model, folder: folder, configuration: configuration) {
+            try control.check()
+        }
+        defer { if let temporary = loaded.temporary { try? FileManager.default.removeItem(at: temporary) } } // Only this call's compiler output, never images.
+        let model = loaded.model
         try control.check()
         let loadSeconds = control.elapsed - loadStart
         try report("Checking the phone gradient")
-        let fixture = try floats(manifest.fixtures["input"]!, root: checked.root, count: MiniPhotoGuardPixels.count)
-        let expectedGradient = try floats(manifest.fixtures["gradient"]!, root: checked.root, count: MiniPhotoGuardPixels.count)
-        let expectedLatent = try floats(manifest.fixtures["latent_mean"]!, root: checked.root, count: 4*32*32)
-        let expectedLoss = try floats(manifest.fixtures["loss"]!, root: checked.root, count: 1)[0]
-        let observed = try evaluate(model, image: fixture)
-        try control.check()
-        let cosine = zip(observed.gradient, expectedGradient).reduce(0.0) { $0 + Double($1.0)*Double($1.1) }
-            / max(norm(observed.gradient)*norm(expectedGradient), 1e-30)
-        guard norm(expectedGradient) > 1e-12, norm(expectedLatent) > 1e-12,
-              cosine >= manifest.gradientCosineMinimum,
-              relative(observed.gradient, expectedGradient) <= manifest.gradientRelativeL2Maximum,
-              relative(observed.latent, expectedLatent) <= manifest.latentRelativeL2Maximum,
-              abs(Double(observed.loss)-Double(expectedLoss)) <= max(manifest.lossAbsoluteTolerance, abs(Double(expectedLoss))*manifest.lossRelativeTolerance) else {
-            throw MiniPhotoGuardError.invalid("This device did not pass the miniPhotoGuard gradient check.")
+        // The parity check runs once per install, OS build, compute units and
+        // compiled model folder, so again after any new compile. Only a pass is recorded.
+        let parity = MiniPhotoGuardMarkers.digest([install, system, "computeUnits=\(configuration.computeUnits.rawValue)", loaded.identity])
+        if defaults.string(forKey: MiniPhotoGuardMarkers.passedParity) != parity {
+            let fixture = try floats(manifest.fixtures["input"]!, root: checked.root, count: MiniPhotoGuardPixels.count)
+            let expectedGradient = try floats(manifest.fixtures["gradient"]!, root: checked.root, count: MiniPhotoGuardPixels.count)
+            let expectedLatent = try floats(manifest.fixtures["latent_mean"]!, root: checked.root, count: 4*32*32)
+            let expectedLoss = try floats(manifest.fixtures["loss"]!, root: checked.root, count: 1)[0]
+            let observed = try evaluate(model, image: fixture)
+            try control.check()
+            let cosine = zip(observed.gradient, expectedGradient).reduce(0.0) { $0 + Double($1.0)*Double($1.1) }
+                / max(norm(observed.gradient)*norm(expectedGradient), 1e-30)
+            guard norm(expectedGradient) > 1e-12, norm(expectedLatent) > 1e-12,
+                  cosine >= manifest.gradientCosineMinimum,
+                  relative(observed.gradient, expectedGradient) <= manifest.gradientRelativeL2Maximum,
+                  relative(observed.latent, expectedLatent) <= manifest.latentRelativeL2Maximum,
+                  abs(Double(observed.loss)-Double(expectedLoss)) <= max(manifest.lossAbsoluteTolerance, abs(Double(expectedLoss))*manifest.lossRelativeTolerance) else {
+                throw MiniPhotoGuardError.invalid("This device did not pass the miniPhotoGuard gradient check.")
+            }
+            defaults.set(parity, forKey: MiniPhotoGuardMarkers.passedParity)
         }
         try report("Preparing the 256-pixel image")
         let prepareStart = control.elapsed
