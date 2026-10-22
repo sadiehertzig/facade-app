@@ -359,7 +359,7 @@ function TeamSection() {
         <h2 id="team-heading">Made by four students</h2>
         <p>
           FACADE was born at Cornell Tech&apos;s Summer Innovation Intensives on Roosevelt Island. It is our entry in the 2026
-          Congressional App Challenge. We built it with help from AI coding tools, OpenAI Codex and Claude Code, as our video explains.
+          Congressional App Challenge.
         </p>
       </div>
       <ul className="team-list">
