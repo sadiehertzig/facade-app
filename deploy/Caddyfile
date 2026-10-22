@@ -2,7 +2,9 @@
 # /etc/caddy/Caddyfile).
 #
 # FACADE_HOST comes from /etc/facade/host.env (SSM /facade/prod/host) through
-# the caddy.service drop-in; it is substituted before parsing.
+# the caddy.service drop-in; it is substituted before parsing. It is
+# facadephotoshield.com. The website accepts uploads only from that one origin
+# (FACADE_PUBLIC_ORIGIN), so the other names at the bottom only redirect to it.
 #
 #   /v1/*           -> 127.0.0.1:8000  PhotoGuard /v1 worker. No basic auth: the
 #                                      worker's own constant-time bearer check
@@ -77,4 +79,12 @@
 		import /etc/caddy/facade-auth.caddy
 		reverse_proxy 127.0.0.1:3000
 	}
+}
+
+# www and the server's original address (its Elastic IP through sslip.io) send
+# every request to the main address. TestFlight builds 1.0 (3) and (4) open the
+# old address from "Try full PhotoGuard on the web", so it must keep working.
+# Neither name may also be FACADE_HOST: Caddy rejects a duplicate site address.
+www.facadephotoshield.com, 32-196-152-27.sslip.io {
+	redir https://{$FACADE_HOST}{uri} 308
 }
