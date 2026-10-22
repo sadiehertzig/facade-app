@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowUpRight, Cloud, Smartphone, WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { IntroVideo } from "@/components/intro-video";
 import { ProtectionWorkspace } from "@/components/protection-workspace";
 import { ResearchMetrics } from "@/components/research-metrics";
 import { OPENRAIL_LICENSE_URL } from "@/lib/protection-recipe";
@@ -51,6 +52,8 @@ export default function Home() {
               the service is available.
             </p>
           </div>
+
+          <IntroVideo />
 
           <ProtectionWorkspace />
 
