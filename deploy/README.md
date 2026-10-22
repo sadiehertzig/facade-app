@@ -12,6 +12,12 @@ us-east-1). Caddy serves everything on one hostname with automatic HTTPS:
 The website calls the worker directly on 127.0.0.1:8000. `/v1` is also reachable
 from outside, but only with the bearer token.
 
+`<host>` is **facadephotoshield.com**. `www.facadephotoshield.com` and the
+server's original address, `32-196-152-27.sslip.io`, redirect there; TestFlight
+builds 1.0 (3) and (4) still link to the old address. The domain's DNS is in
+Route 53 (two A records, apex and `www`, pointing at the Elastic IP
+32.196.152.27).
+
 ## Who does what
 
 - **Teammates:** work on a branch and open a pull request. Run the tests first

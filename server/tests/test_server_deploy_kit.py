@@ -306,6 +306,16 @@ def test_caddyfile_routes_v1_demo_and_website():
     assert "basic_auth" not in text, "the hash block is imported, never inlined"
 
 
+def test_caddyfile_other_names_only_redirect_to_the_main_address():
+    """The website's Origin check accepts one origin, so www and the old sslip.io name must only redirect."""
+    lines = _caddy_lines()
+    _, body = _block(lines, "www.facadephotoshield.com, 32-196-152-27.sslip.io {")
+    assert body == ["www.facadephotoshield.com, 32-196-152-27.sslip.io {",
+                    "redir https://{$FACADE_HOST}{uri} 308", "}"]
+    assert [line for line in lines if not line.startswith(("\t", " ", "}"))] == [
+        "{$FACADE_HOST} {", "www.facadephotoshield.com, 32-196-152-27.sslip.io {"], "exactly two site blocks"
+
+
 def test_caddyfile_body_limits_are_per_route_and_match_the_demo():
     """/v1 and the website keep 12MB; the demo takes full-resolution editor PNGs (64MB), in step with app.py."""
     lines = _caddy_lines()
