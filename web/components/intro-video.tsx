@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-// The contest demo video, at the top of the Prepare tab. The file is served
+// The contest demo video, near the top of the Home tab. The file is served
 // from web/public/video by this app (Next.js answers byte-range requests, which
 // Safari needs to play and seek). The same video is on Vimeo for the
 // Congressional App Challenge form, which requires a public Vimeo or YouTube link.
@@ -16,7 +16,7 @@ const POSTER_ALT =
 
 export function IntroVideo() {
   return (
-    <section className="intro-video" aria-labelledby="intro-video-heading">
+    <section className="intro-video" id="video" aria-labelledby="intro-video-heading">
       <div className="intro-video-frame">
         {VIDEO_SRC ? (
           <video

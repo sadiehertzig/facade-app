@@ -3,11 +3,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowUpRight, Cloud, Smartphone, WandSparkles } from "lucide-react";
+import {
+  ArrowUpRight,
+  CloudOff,
+  FlaskConical,
+  ImagePlus,
+  Images,
+  Play,
+  ScanFace,
+  ShieldHalf,
+  Smartphone,
+  WandSparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IntroVideo } from "@/components/intro-video";
-import { ProtectionWorkspace } from "@/components/protection-workspace";
 import { ResearchMetrics } from "@/components/research-metrics";
 import { OPENRAIL_LICENSE_URL } from "@/lib/protection-recipe";
 
@@ -18,9 +28,10 @@ const PHOTOGUARD_DEMO_URL = "/photoguard/?__theme=light";
 
 // Public TestFlight link for the iPhone beta (FACADE Photo Shield on App Store Connect).
 const TESTFLIGHT_URL = "https://testflight.apple.com/join/dxMRcMkd";
+const TESTFLIGHT_APP_URL = "https://apps.apple.com/us/app/testflight/id899247664";
 
 export default function Home() {
-  const [section, setSection] = useState("prepare");
+  const [section, setSection] = useState("home");
 
   return (
     <Tabs value={section} onValueChange={setSection} className="site-shell">
@@ -29,7 +40,7 @@ export default function Home() {
           <span className="brand-mark">F</span>FACADE
         </Link>
         <TabsList variant="line" aria-label="Main navigation" className="site-nav">
-          <TabsTrigger value="prepare">Prepare a photo</TabsTrigger>
+          <TabsTrigger value="home">Home</TabsTrigger>
           <TabsTrigger value="help">Get help</TabsTrigger>
           <TabsTrigger value="research">Our approach</TabsTrigger>
         </TabsList>
@@ -37,29 +48,18 @@ export default function Home() {
       </header>
 
       <main className="main-content">
-        <TabsContent value="prepare">
-          <div className="page-heading">
-            <div>
-              <p className="eyebrow">BEFORE YOU SHARE</p>
-              <h1>
-                A little more control
-                <br />
-                over your photos.
-              </h1>
-            </div>
-            <p className="heading-note">
-              Explore experimental protection against AI edits. Prepare a crop in your browser, then choose online processing only when
-              the service is available.
-            </p>
-          </div>
+        <TabsContent value="home">
+          <Hero />
 
           <IntroVideo />
 
-          <ProtectionWorkspace />
+          <FaceSwapExample />
 
-          <PhotoGuardDemoCard />
+          <HowItWorks />
 
-          <GetTheAppCard />
+          <PhotoGuardSection />
+
+          <TeamSection />
 
           <div className="support-strip">
             <div>
@@ -136,12 +136,12 @@ export default function Home() {
               </p>
             </section>
             <section className="explanation-card">
-              <Cloud size={28} />
-              <h2>PhotoGuard encoder online</h2>
+              <WandSparkles size={28} />
+              <h2>Full PhotoGuard on our server</h2>
               <p>
-                This website sends a 512&nbsp;×&nbsp;512 crop to the team’s private GPU server. The server runs the encoder method from
-                PhotoGuard’s official demo for 200 optimization steps, then returns a PNG. This is distinct from PhotoGuard’s heavier
-                diffusion attack.
+                For AI edits beyond faces, the team’s GPU server runs PhotoGuard’s official demo. It protects a 512&nbsp;×&nbsp;512 crop
+                with the encoder method (200 optimization steps), then runs the same Stable Diffusion 1.5 inpainting edit on the original
+                and on the protected copy. This is distinct from PhotoGuard’s heavier diffusion attack.
               </p>
             </section>
           </div>
@@ -169,69 +169,204 @@ export default function Home() {
 
       <footer>
         <span className="footer-brand">FACADE</span>
-        <span>Your photos. Informed choices.</span>
+        <span>Your photo. Your choice.</span>
         <span>Experimental research · No guarantee of protection</span>
       </footer>
     </Tabs>
   );
 }
 
-function PhotoGuardDemoCard() {
+// The catch phrase and the app, first. The phrase matches the app's own header.
+function Hero() {
   return (
-    <section className="demo-card" aria-labelledby="demo-heading">
-      <div className="demo-icon">
-        <WandSparkles size={26} />
-      </div>
-      <div className="demo-text">
-        <p className="eyebrow">SEE IT AGAINST A REAL EDIT</p>
-        <h2 id="demo-heading">Full PhotoGuard demo</h2>
-        <p>
-          Upload an image, paint over the part to keep (such as a face), and describe an edit. The demo immunizes the image, then runs
-          the same AI edit on the original and on the protected copy, so you can compare the two results side by side. A run takes
-          about a minute.
+    <section className="hero" aria-labelledby="hero-heading">
+      <div className="hero-text">
+        <p className="hero-eyebrow">FACADE FOR IPHONE · FREE BETA</p>
+        <h1 id="hero-heading">
+          Your photo.
+          <br />
+          Your choice.
+        </h1>
+        <p className="hero-lede">
+          FACADE adds a layer of protection to your photos before you share them, to make AI face swaps harder. It runs entirely on
+          your iPhone, so your photos are never uploaded.
         </p>
+        <ul className="hero-chips" aria-label="Key facts">
+          <li>
+            <CloudOff size={16} aria-hidden /> No upload
+          </li>
+          <li>
+            <Images size={16} aria-hidden /> Original kept
+          </li>
+          <li>
+            <FlaskConical size={16} aria-hidden /> Experimental
+          </li>
+        </ul>
+        <div className="hero-actions">
+          <a className="hero-button" href={TESTFLIGHT_URL} target="_blank" rel="noreferrer">
+            Get the iPhone app <ArrowUpRight size={16} />
+          </a>
+          <a className="hero-button hero-button-quiet" href="#video">
+            <Play size={16} aria-hidden /> Watch the video
+          </a>
+        </div>
+      </div>
+      <div className="hero-qr">
+        <Image src="/testflight-qr.svg" alt="QR code for the FACADE TestFlight beta link" width={148} height={148} unoptimized />
+        <p>
+          Scan with your iPhone camera. Install Apple&apos;s free{" "}
+          <a href={TESTFLIGHT_APP_URL} target="_blank" rel="noreferrer">
+            TestFlight
+          </a>{" "}
+          app first.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+// The face-swap example from the contest video. The swaps are 128 × 128 because
+// that is the size the swap model makes. Keep the "hand-picked" label next to it.
+function FaceSwapExample() {
+  return (
+    <section className="example" aria-labelledby="example-heading">
+      <div className="section-heading">
+        <p className="eyebrow">WHAT FACADE DOES</p>
+        <h2 id="example-heading">Same photo to you. A different face to a face-swap tool.</h2>
+        <p>
+          FACADE changes each color value by at most 5 out of 255, pushing the face&apos;s identity code away from you. Then we ask a
+          face-swap tool to put the face on someone else.
+        </p>
+      </div>
+      <div className="example-grid">
+        <figure className="example-group">
+          <figcaption>1. FACADE protects the photo</figcaption>
+          <div className="example-tiles">
+            <ExampleTile src="/example/your-photo.jpg" label="Your photo" />
+            <ExampleTile src="/example/protected.jpg" label="Protected by FACADE" note="Looks the same" />
+          </div>
+        </figure>
+        <figure className="example-group">
+          <figcaption>2. A face-swap tool puts that face on someone else</figcaption>
+          <div className="example-tiles">
+            <ExampleTile src="/example/swap-target.jpg" label="Someone else" />
+            <ExampleTile src="/example/fake-from-original.png" label="Fake made from your photo" note="Looks like her" pixel />
+            <ExampleTile src="/example/fake-from-protected.png" label="Fake made from the protected photo" note="Doesn’t look like her" pixel />
+          </div>
+        </figure>
+      </div>
+      <p className="example-note">
+        One hand-picked example, with AI-generated fictional people. In 192 test swaps, 92% of SimSwap fakes stopped matching the
+        person, but only 59% for InSwapper. Protection is experimental and never guaranteed.
+      </p>
+    </section>
+  );
+}
+
+function ExampleTile({ src, label, note, pixel = false }: { src: string; label: string; note?: string; pixel?: boolean }) {
+  return (
+    <div className="example-tile">
+      <Image src={src} alt={`${label}${note ? `: ${note.toLowerCase()}` : ""}`} width={320} height={320} unoptimized className={pixel ? "example-small" : undefined} />
+      <span className="example-label">{label}</span>
+      {note ? <span className="example-badge">{note}</span> : null}
+    </div>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    { icon: ImagePlus, title: "Pick a photo", text: "Choose one from your library or take a selfie. Use photos you have permission to use." },
+    { icon: ShieldHalf, title: "Protect it", text: "FACADE changes the pixels slightly, on your phone. Our test photo took about a minute on an iPhone 17 Pro." },
+    { icon: ScanFace, title: "Compare and test", text: "Check before and after, run the built-in face-swap test, and save the protected copy to share." },
+  ];
+  return (
+    <section className="steps" aria-labelledby="steps-heading">
+      <h2 id="steps-heading" className="steps-heading">
+        How the app works
+      </h2>
+      <ol className="steps-list">
+        {steps.map(({ icon: Icon, title, text }) => (
+          <li key={title}>
+            <span className="steps-icon">
+              <Icon size={22} aria-hidden />
+            </span>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+// The one PhotoGuard entry point on the site: the full upstream demo on our GPU
+// server (server/photoguard_demo), which protects a photo and then runs the same
+// AI edit on the original and on the protected copy.
+//
+// The example is one run of that demo's code (PhotoGuardDemo.compare, pinned SD 1.5
+// inpainting snapshot, seed 1234, 100 steps, guidance 7.5, 200 PGD steps) on the
+// app's sample photo, with the face and hair kept. It ran on a Mac GPU, not the server.
+function PhotoGuardSection() {
+  return (
+    <section className="example" aria-labelledby="demo-heading">
+      <div className="section-heading">
+        <p className="eyebrow">AI EDITS BEYOND FACES</p>
+        <h2 id="demo-heading">Full PhotoGuard, on our server</h2>
+        <p>
+          PhotoGuard is MIT research that protects a photo against AI editors like Stable Diffusion, which can repaint part of a
+          picture, such as clothing or the background. Our GPU server runs it: you upload a photo, paint the part to keep and describe
+          an edit. It protects the photo, then runs the same edit on the original and on the protected copy so you can compare them.
+          A run takes about a minute.
+        </p>
+      </div>
+      <div className="example-tiles pg-tiles">
+        <ExampleTile src="/example/pg-original.jpg" label="The photo" />
+        <ExampleTile src="/example/pg-protected.jpg" label="Protected by PhotoGuard" note="Slight grain" />
+        <ExampleTile src="/example/pg-edit-original.jpg" label="AI edit of the photo" note="Believable" />
+        <ExampleTile src="/example/pg-edit-protected.jpg" label="Same AI edit of the protected copy" note="Falls apart" />
+      </div>
+      <p className="example-note">
+        One run with the app&apos;s AI-generated sample photo and the demo&apos;s example prompt, &ldquo;a photo of a person at a
+        wedding.&rdquo; We kept her face and hair and let the AI repaint the rest. Same code, model and settings as our server, run on a
+        Mac. Results vary with the photo and the prompt.
+      </p>
+      <div className="pg-actions">
+        <a className="demo-link" href={PHOTOGUARD_DEMO_URL}>
+          Open full PhotoGuard <ArrowUpRight size={16} />
+        </a>
         <p className="demo-note">
-          In the demo you paint what to keep; on this page you mark what could be replaced. Only upload photos of yourself, or of
-          people who have agreed to it. The demo runs Stable Diffusion 1.5; by using it you agree to follow the model&apos;s{" "}
+          The live demo needs a password, because it runs real AI edits on uploaded photos. Contest judges can ask us for access. Only
+          upload photos of yourself, or of people who have agreed to it. The demo runs Stable Diffusion 1.5; by using it you agree to
+          follow the model&apos;s{" "}
           <a href={OPENRAIL_LICENSE_URL} target="_blank" rel="noreferrer">
             use restrictions (CreativeML OpenRAIL-M)
           </a>
           .
         </p>
       </div>
-      <a className="demo-link" href={PHOTOGUARD_DEMO_URL}>
-        Open the PhotoGuard demo <ArrowUpRight size={16} />
-      </a>
     </section>
   );
 }
 
-function GetTheAppCard() {
+// Names only (as in the contest video): no schools, photos or contact details.
+const TEAM = ["Sadie Hertzig", "Aria Sharma", "Evelyn Yan", "Catalina Zapata"];
+
+function TeamSection() {
   return (
-    <section className="demo-card" aria-labelledby="app-heading">
-      <div className="demo-icon">
-        <Smartphone size={26} />
-      </div>
-      <div className="demo-text">
-        <p className="eyebrow">ON YOUR IPHONE</p>
-        <h2 id="app-heading">Get the FACADE app (beta)</h2>
+    <section className="team" aria-labelledby="team-heading">
+      <div className="section-heading">
+        <p className="eyebrow">WHO WE ARE</p>
+        <h2 id="team-heading">Made by four students</h2>
         <p>
-          The FACADE iPhone app protects photos entirely on your phone; nothing is uploaded. It is a beta built for the 2026
-          Congressional App Challenge. First install Apple&apos;s free TestFlight app from the App Store, then open the link below on
-          your iPhone or scan the code with its camera.
+          FACADE was born at Cornell Tech&apos;s Summer Innovation Intensives on Roosevelt Island. It is our entry in the 2026
+          Congressional App Challenge. We built it with help from AI coding tools, OpenAI Codex and Claude Code, as our video explains.
         </p>
-        <p className="demo-note">
-          Protection is experimental. See the{" "}
-          <a href="/privacy" target="_blank" rel="noreferrer">
-            privacy policy
-          </a>
-          .
-        </p>
-        <a className="demo-link app-link" href={TESTFLIGHT_URL} target="_blank" rel="noreferrer">
-          Join the TestFlight beta <ArrowUpRight size={16} />
-        </a>
       </div>
-      <Image className="app-qr" src="/testflight-qr.svg" alt="QR code for the FACADE TestFlight beta link" width={132} height={132} unoptimized />
+      <ul className="team-list">
+        {TEAM.map((name) => (
+          <li key={name}>{name}</li>
+        ))}
+      </ul>
     </section>
   );
 }
