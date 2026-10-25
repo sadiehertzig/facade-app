@@ -1,0 +1,69 @@
+# FACADE: files that must never be committed.
+# web/ has its own .gitignore as well. Do not add a bare "build/" line here.
+
+# --- Secrets and local settings ----------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.cer
+*.mobileprovision
+
+# --- Model weights (shared privately, never in git) ---------------------------
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+*.f32
+*.mlpackage
+*.mlmodelc
+
+# --- iOS app -------------------------------------------------------------------
+# Your Apple team ID and bundle identifier live here.
+app/ios/FACADE/Config/Local.xcconfig
+# Built C/C++ libraries (app/ios/scripts/build_native_deps.sh).
+app/ios/Vendor/
+# Private models: only the README is shared.
+app/ios/Models/*
+!app/ios/Models/README.md
+app/ios/build/
+app/ios/build-release/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcresult
+*.xcarchive
+*.ipa
+*.dSYM/
+*.dSYM.zip
+.swiftpm/
+
+# --- Python (server/) ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.venv/
+venv/
+
+# --- Website (web/) --------------------------------------------------------------
+node_modules/
+web/.next/
+web/out/
+web/coverage/
+web/next-env.d.ts
+*.tsbuildinfo
+npm-debug.log*
+
+# --- OS and editor files -----------------------------------------------------------
+.DS_Store
+._*
+*.swp
+.idea/

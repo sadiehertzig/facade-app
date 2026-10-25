@@ -1,0 +1,62 @@
+// Build settings for the FACADE app target, shared by everyone.
+//
+// Your own signing settings (Apple team and bundle identifier) go in
+// Local.xcconfig next to this file. Copy Local.xcconfig.example to start;
+// Local.xcconfig is ignored by git, so your team ID never gets committed.
+// Please do not pick a team in Xcode's "Signing & Capabilities" tab: Xcode
+// would write it into project.pbxproj, which is shared.
+
+// App identity
+PRODUCT_NAME = FACADE
+PRODUCT_BUNDLE_IDENTIFIER = com.example.facade
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 4
+INFOPLIST_FILE = FACADE/Config/Info.plist
+GENERATE_INFOPLIST_FILE = NO
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon
+// Navy (#244B92) for system controls such as the photo picker and dialogs.
+ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
+
+// Web page opened by the "Try full PhotoGuard on the web" link. Empty here, so
+// the link is hidden. Set it in your Local.xcconfig, for example to the team
+// server's address (which asks for the team password).
+FACADE_WEBSITE_URL =
+
+// Signing: filled in by Local.xcconfig
+CODE_SIGN_STYLE = Automatic
+CODE_SIGN_ENTITLEMENTS = FACADE/Config/FACADE.entitlements
+DEVELOPMENT_TEAM =
+
+// Platform: iPhone, iOS 18 or newer, device or Apple Silicon simulator
+SDKROOT = iphoneos
+SUPPORTED_PLATFORMS = iphoneos iphonesimulator
+TARGETED_DEVICE_FAMILY = 1
+IPHONEOS_DEPLOYMENT_TARGET = 18.0
+EXCLUDED_ARCHS[sdk=iphonesimulator*] = x86_64
+SWIFT_VERSION = 5.0
+SWIFT_STRICT_CONCURRENCY = minimal
+LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
+
+// The "Copy private models" build phase reads app/ios/Models.
+ENABLE_USER_SCRIPT_SANDBOXING = NO
+
+// The protection engine is numerical code. It stays optimized, with strict
+// floating point, in Debug too, so both configurations produce the same pixels.
+SWIFT_OPTIMIZATION_LEVEL = -O
+GCC_OPTIMIZATION_LEVEL = 3
+GCC_FAST_MATH = NO
+CLANG_CXX_LANGUAGE_STANDARD = c++17
+CLANG_ENABLE_MODULES = YES
+CLANG_ENABLE_OBJC_ARC = YES
+OTHER_CFLAGS = $(inherited) -ffp-contract=off -fno-fast-math
+OTHER_CPLUSPLUSFLAGS = $(inherited) -ffp-contract=off -fno-fast-math
+
+// C/C++ libraries built by scripts/build_native_deps.sh
+FACADE_VENDOR_DIR = $(PROJECT_DIR)/Vendor/$(PLATFORM_NAME)
+SWIFT_INCLUDE_PATHS = $(inherited) $(PROJECT_DIR)/FACADE/Native/include
+HEADER_SEARCH_PATHS = $(inherited) $(FACADE_VENDOR_DIR)/include
+LIBRARY_SEARCH_PATHS = $(inherited) $(FACADE_VENDOR_DIR)/lib
+OTHER_LDFLAGS = $(inherited) -lopencv_imgproc -lopencv_core -lkleidicv_hal -lkleidicv_thread -lkleidicv -lzlib -lsleef -ljpeg -framework Accelerate
+
+// Personal overrides, if present (ignored by git).
+#include? "Local.xcconfig"

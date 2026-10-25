@@ -1,0 +1,157 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.800
+One photo is all an AI face-swap tool needs to fake your face.
+
+00:00:04.866 --> 00:00:08.552
+Hi, I'm Aria Sharma, and FACADE was born at Cornell Tech's Summer
+
+00:00:08.602 --> 00:00:11.126
+Innovation Intensives on Roosevelt Island.
+
+00:00:11.176 --> 00:00:14.962
+It's an iPhone app that protects your photos before you share them,
+
+00:00:15.012 --> 00:00:18.142
+so AI face swaps have a harder time copying your face,
+
+00:00:18.192 --> 00:00:20.666
+for students and anyone who posts photos.
+
+00:00:20.733 --> 00:00:22.365
+Hi, I'm Catalina.
+
+00:00:22.415 --> 00:00:28.057
+One in eight young people knew someone targeted with deepfake nudes as a minor.
+
+00:00:28.107 --> 00:00:33.427
+A Texas teen's ordinary photos became fake nudes, helping inspire the TAKE
+
+00:00:33.477 --> 00:00:38.343
+IT DOWN Act: platforms must now remove these fakes within 48 hours.
+
+00:00:38.393 --> 00:00:40.607
+But that's after the harm.
+
+00:00:40.657 --> 00:00:43.583
+We wanted protection before you post.
+
+00:00:43.633 --> 00:00:44.916
+I'm Sadie Hertzig.
+
+00:00:44.966 --> 00:00:48.670
+Face swaps turn your face into a 512-number identity code and paste
+
+00:00:48.720 --> 00:00:50.152
+it onto someone else.
+
+00:00:50.202 --> 00:00:54.400
+Researchers at the University of Chicago and MIT built Fawkes and PhotoGuard,
+
+00:00:54.450 --> 00:00:58.944
+which use tiny pixel changes to shield photos from face recognition and AI editing.
+
+00:00:58.994 --> 00:01:03.883
+We target InSwapper and SimSwap, models inside free apps like FaceFusion and Deep-Live-Cam.
+
+00:01:03.933 --> 00:01:08.035
+A photo is a grid of pixels, each three numbers: red, green and blue.
+
+00:01:08.085 --> 00:01:12.400
+On your phone, FACADE nudges those color numbers by at most 5 out of 255,
+
+00:01:12.450 --> 00:01:16.393
+in about a minute, pushing the face's identity code away from you.
+
+00:01:16.443 --> 00:01:18.948
+Here's that layer, brightened 24 times.
+
+00:01:18.998 --> 00:01:21.929
+Swap the original, and the fake looks like her.
+
+00:01:21.979 --> 00:01:24.378
+Swap the protected one: someone else.
+
+00:01:24.428 --> 00:01:26.508
+That's one hand-picked example.
+
+00:01:26.558 --> 00:01:30.394
+In 192 test swaps, 92 percent of SimSwap fakes stopped matching,
+
+00:01:30.444 --> 00:01:32.683
+but only 59 percent for InSwapper.
+
+00:01:32.733 --> 00:01:36.098
+In the app, you pick a photo, tap Protect, compare,
+
+00:01:36.148 --> 00:01:38.033
+and run a face-swap test.
+
+00:01:38.066 --> 00:01:41.756
+And Get Help links to how the TAKE IT DOWN Act works and,
+
+00:01:41.806 --> 00:01:45.723
+if you still need help, how to reach your member of Congress,
+
+00:01:45.773 --> 00:01:47.366
+who's there to help.
+
+00:01:47.433 --> 00:01:51.443
+I'm Evelyn; the team brought me in to help with the phone engineering.
+
+00:01:51.493 --> 00:01:56.376
+PhotoGuard targets diffusion models like Stable Diffusion and DALL·E, which can repaint
+
+00:01:56.426 --> 00:01:57.661
+part of a photo.
+
+00:01:57.711 --> 00:02:01.926
+Our phone version, Mini PhotoGuard, isn't there yet: it takes six minutes,
+
+00:02:01.976 --> 00:02:05.369
+visibly changes the photo, and isn't proven to stop edits.
+
+00:02:05.419 --> 00:02:09.274
+The full version needs more engineering to run on a phone; for now,
+
+00:02:09.324 --> 00:02:11.433
+it runs on facadephotoshield.com.
+
+00:02:11.500 --> 00:02:16.707
+We ran hundreds of research experiments in Python and PyTorch to get FACADE working.
+
+00:02:16.757 --> 00:02:20.665
+The app is Swift, SwiftUI and Core ML; the site is TypeScript
+
+00:02:20.715 --> 00:02:22.248
+and Next.js on AWS.
+
+00:02:22.298 --> 00:02:26.036
+Codex and Claude Code were a huge help on the iPhone side;
+
+00:02:26.086 --> 00:02:28.750
+we couldn't have built it without them.
+
+00:02:28.800 --> 00:02:32.186
+Next, we need funding to train our own face-swap models,
+
+00:02:32.236 --> 00:02:37.050
+plus Mini PhotoGuard engineering, real social-media tests, and an App Store launch.
+
+00:02:37.100 --> 00:02:41.835
+As AI gets more powerful, protecting our digital identities matters more than ever.
+
+00:02:41.885 --> 00:02:46.100
+FACADE is our step toward making that protection accessible for everyone.
+
+00:02:46.166 --> 00:02:49.216
+FACADE tries to get ahead of the harm.
+
+00:02:49.266 --> 00:02:50.266
+Your photo.
+
+00:02:50.333 --> 00:02:52.761
+Your choice.
+
+00:02:52.811 --> 00:02:56.183
+Thanks for watching!

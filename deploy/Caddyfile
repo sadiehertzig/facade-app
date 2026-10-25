@@ -1,0 +1,120 @@
+# FACADE server: one hostname, automatic HTTPS (installed by bootstrap.sh as
+# /etc/caddy/Caddyfile).
+#
+# Caddy is the only program on the server that the internet can reach (ports
+# 80 and 443). It gets and renews the HTTPS certificate by itself, then passes
+# each request to one of three programs that listen only on the server's own
+# loopback address (127.0.0.1), which outside computers cannot reach directly:
+# the website, the PhotoGuard demo and the PhotoGuard worker.
+#
+# FACADE_HOST comes from /etc/facade/host.env (SSM /facade/prod/host) through
+# the caddy.service drop-in; it is substituted before parsing. It is
+# facadephotoshield.com. The website accepts uploads only from that one origin
+# (FACADE_PUBLIC_ORIGIN), so the other names at the bottom only redirect to it.
+#
+#   /v1/*           -> 127.0.0.1:8000  PhotoGuard /v1 worker. No basic auth: the
+#                                      worker's own constant-time bearer check
+#                                      protects it. (Basic auth and a bearer
+#                                      token both travel in the same
+#                                      Authorization header, so a request
+#                                      cannot carry both; the bearer is the
+#                                      stronger of the two. The health check and
+#                                      the deploy tool call /v1/capabilities
+#                                      from outside with the bearer.)
+#   /photoguard/*   -> 127.0.0.1:7860  upstream PhotoGuard Gradio demo, behind
+#                                      basic_auth. The path is passed through
+#                                      unchanged; the demo runs with
+#                                      --root-path /photoguard.
+#   /privacy        -> deploy/public/privacy.html, a static page served by Caddy
+#                                      itself. PUBLIC (no basic auth) so Apple's
+#                                      reviewers can read the privacy policy.
+#   everything else -> 127.0.0.1:3000  the FACADE website (Next.js). PUBLIC
+#                                      (no basic auth); its PhotoGuard flow is
+#                                      rate-limited per visitor in the website.
+#
+# The `basic_auth { owner <bcrypt> }` block is imported from a 0640 root:caddy
+# file that bootstrap.sh writes from SSM /facade/prod/basic-auth-hash, so the
+# hash is never in this repository. Basic auth is the browser's built-in
+# user-name-and-password prompt; only a bcrypt hash of the password is stored,
+# never the password itself.
+#
+# Request bodies: 12MB on /v1 (the worker itself caps at 4 MiB), 64MB for the
+# demo (full-resolution editor uploads), 12MB for the website (its API routes
+# cap uploads at 4 MiB).
+#
+# There is deliberately no `log` directive: no access log is written.
+# reverse_proxy has no read/write timeout by default, streams text/event-stream
+# (Gradio's queue) immediately and tunnels WebSocket upgrades, so long Gradio
+# jobs are not cut off.
+
+# The main site. Caddy tries the `handle` blocks in order of how specific
+# their paths are, and the bare `handle` at the end catches everything else.
+{$FACADE_HOST} {
+	# The worker API. Bearer token checked by the worker itself; see the header.
+	handle /v1/* {
+		# Refuse bodies over 12MB before they reach the worker.
+		request_body {
+			max_size 12MB
+		}
+		reverse_proxy 127.0.0.1:8000 {
+			# Buffer the whole body so the worker always gets a Content-Length
+			# (it rejects Transfer-Encoding, e.g. from HTTP/2 clients that omit
+			# content-length). The worker itself caps requests at 4 MiB.
+			request_buffers 12MB
+		}
+	}
+
+	# The demo lives under /photoguard/ (its --root-path); send the bare path
+	# there so the page and its assets resolve under the same prefix.
+	redir /photoguard /photoguard/ 308
+
+	# The PhotoGuard demo (Gradio), behind the site password.
+	handle /photoguard/* {
+		# The Gradio 6 image editor re-uploads the painted photo at full resolution
+		# as separate PNGs (background, layer, composite); a 24 MP phone photo is
+		# ~40 MB each. Keep in step with max_file_size in server/photoguard_demo/app.py.
+		request_body {
+			max_size 64MB
+		}
+		# The password check (basic_auth block written by bootstrap.sh).
+		import /etc/caddy/facade-auth.caddy
+		# flush_interval -1 sends each piece of the demo's reply on at once, so
+		# its live progress updates are not held back in a buffer.
+		reverse_proxy 127.0.0.1:7860 {
+			flush_interval -1
+		}
+	}
+
+	# The privacy policy is the one public page (Apple's TestFlight and App Store
+	# reviewers must be able to open it). It is a self-contained static file from
+	# this repository, served directly by Caddy: no website code, no photos, no auth.
+	redir /privacy/ /privacy 308
+	handle /privacy {
+		# Answer with deploy/public/privacy.html from the deployed copy of this
+		# repository. The rewrite pins the one file, so no other file can be asked for.
+		root * /opt/facade/src/deploy/public
+		rewrite * /privacy.html
+		file_server
+	}
+
+	# Everything else: the FACADE website (Next.js). Public since 2026-10-25 for
+	# the Congressional App Challenge judges; its PhotoGuard flow is rate-limited
+	# per visitor inside the website's own API routes (web/app/api/processing).
+	handle {
+		# 12MB here; the website's own API routes refuse anything over 4 MB.
+		request_body {
+			max_size 12MB
+		}
+		reverse_proxy 127.0.0.1:3000
+	}
+}
+
+# www and the server's original sslip.io address send every request to the
+# main address. TestFlight builds 1.0 (3) and (4) open the old address from
+# "Try full PhotoGuard on the web", so it must keep working.
+# Neither name may also be FACADE_HOST: Caddy rejects a duplicate site address.
+# 308 is a permanent redirect that keeps the request method (e.g. POST stays
+# POST), and {uri} keeps the path, so every old link lands on the same page.
+www.facadephotoshield.com, 32-196-152-27.sslip.io {
+	redir https://{$FACADE_HOST}{uri} 308
+}

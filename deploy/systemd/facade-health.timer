@@ -1,0 +1,19 @@
+# FACADE server: run facade-health.service every 60 s.
+[Unit]
+Description=FACADE health check every 60 s
+
+# [Timer]: when to run facade-health.service.
+[Timer]
+# First run two minutes after boot,
+OnBootSec=120
+# then 60 seconds after each run started,
+OnUnitActiveSec=60
+# give or take 5 seconds.
+AccuracySec=5
+# The unit this timer starts.
+Unit=facade-health.service
+
+# [Install]: what `systemctl enable` hooks it into.
+[Install]
+# `systemctl enable` makes the timer itself start at every boot.
+WantedBy=timers.target

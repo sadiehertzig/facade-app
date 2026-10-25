@@ -1,0 +1,65 @@
+# FACADE server: the website (web/, a standard Next.js app) on 127.0.0.1:3000.
+# Caddy serves it at https://$FACADE_HOST/ behind basic_auth.
+# bootstrap.sh installs Node 22 LTS to /opt/facade/node, runs `npm ci` and
+# `npm run build` in /opt/facade/src/web as the facade user, and writes
+# /etc/facade/web.env (0400 facade): FACADE_PROCESSOR_URL (the loopback worker),
+# FACADE_PROCESSOR_TOKEN (the worker bearer), FACADE_PUBLIC_ORIGIN and NODE_ENV.
+[Unit]
+# The name shown by `systemctl status` and in the logs.
+Description=FACADE website (Next.js, 127.0.0.1:3000)
+# Start only once the network is up.
+Wants=network-online.target
+After=network-online.target
+# Never give up restarting, however often it fails.
+StartLimitIntervalSec=0
+
+# [Service]: how to run it, and the limits it runs under.
+[Service]
+# A long-running program: systemd considers it started as soon as it launches.
+Type=simple
+# Run as the unprivileged `facade` system user (no login, no sudo), never as root.
+User=facade
+Group=facade
+# Start in the deployed web/ folder.
+WorkingDirectory=/opt/facade/src/web
+# Program output goes to the system journal (`facade_server.py logs`).
+StandardOutput=journal
+StandardError=journal
+# The website's settings, including the worker token (see the header).
+EnvironmentFile=/etc/facade/web.env
+# A private home directory for the service user.
+Environment=HOME=/var/lib/facade
+# Use the pinned Node.js that bootstrap.sh installed.
+Environment=PATH=/opt/facade/node/bin:/usr/bin:/bin
+# Next.js: send no usage statistics.
+Environment=NEXT_TELEMETRY_DISABLED=1
+# The website: `next start`, on loopback port 3000 only.
+ExecStart=/opt/facade/node/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000
+# If the program stops for any reason, start it again after 5 seconds.
+Restart=always
+RestartSec=5
+# Allow 30 seconds for a clean shutdown before it is killed.
+TimeoutStopSec=30
+# No core dumps: a crash must never write the process's memory (which may
+# hold a photo or the token) to disk.
+LimitCORE=0
+# Files the service creates are readable by the `facade` user only.
+UMask=0077
+# The process and anything it starts can never gain more privileges than
+# it started with (e.g. through a setuid program).
+NoNewPrivileges=yes
+# A private, empty /tmp and /var/tmp that no other program can see.
+PrivateTmp=yes
+# /home, /root and /run/user are invisible to the service.
+ProtectHome=yes
+# /usr, /boot and /etc are read-only for the service.
+ProtectSystem=full
+# The code is read-only; `next start` may write only its cache (the "-" skips a
+# missing directory, which bootstrap.sh creates).
+ReadOnlyPaths=/opt/facade
+ReadWritePaths=-/opt/facade/src/web/.next/cache
+
+# [Install]: what `systemctl enable` hooks it into.
+[Install]
+# `systemctl enable` makes it start at every boot.
+WantedBy=multi-user.target

@@ -1,0 +1,38 @@
+# FACADE server: one health probe (run by facade-health.timer every 60 s).
+# Loopback website (127.0.0.1:3000), loopback Gradio (127.0.0.1:7860/photoguard/),
+# loopback /v1/capabilities with the bearer, plus the public
+# https://$FACADE_HOST/v1/capabilities through Caddy/TLS. One JSON line to
+# journald: journalctl -u facade-health -n 5. Uses the system python (stdlib
+# only) so it still reports when the venv is broken.
+[Unit]
+# The name shown by `systemctl status` and in the logs.
+Description=FACADE health check (web, demo, worker, public /v1)
+# Run after the network is up: one check goes out through the public address.
+After=network-online.target
+
+# [Service]: how to run it, and the limits it runs under.
+[Service]
+# A job that runs once to the end, not a long-running program.
+Type=oneshot
+# Run as the unprivileged `facade` system user (no login, no sudo), never as root.
+User=facade
+Group=facade
+# The public hostname (FACADE_HOST), for the public check. Optional ("-").
+EnvironmentFile=-/etc/facade/host.env
+# Run the checks once and print one JSON line to the journal.
+ExecStart=/usr/bin/python3 /opt/facade/src/server/health.py --bearer-file /etc/facade/worker.bearer
+# A check that hangs is stopped after 90 seconds.
+TimeoutStartSec=90
+# No core dumps: a crash must never write the process's memory (which may
+# hold a photo or the token) to disk.
+LimitCORE=0
+# The process and anything it starts can never gain more privileges than
+# it started with (e.g. through a setuid program).
+NoNewPrivileges=yes
+# A private, empty /tmp and /var/tmp that no other program can see.
+PrivateTmp=yes
+# /home, /root and /run/user are invisible to the service.
+ProtectHome=yes
+# The whole file system is read-only for the service, apart from the paths
+# listed in ReadWritePaths=.
+ProtectSystem=strict

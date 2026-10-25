@@ -1,0 +1,82 @@
+# FACADE server: the /v1 PhotoGuard encoder worker (server/worker/). The website
+# calls it on loopback, and Caddy also proxies https://$FACADE_HOST/v1/* here with
+# no basic auth: the worker's own bearer check protects it. Loopback only.
+# The hex64 bearer arrives on stdin from /etc/facade/worker.bearer (0400
+# facade:facade, written by bootstrap.sh from SSM /facade/prod/processor-token).
+# Every start runs a fresh 200-step CUDA smoke before reporting ready.
+[Unit]
+# The name shown by `systemctl status` and in the logs.
+Description=FACADE PhotoGuard /v1 worker (127.0.0.1:8000)
+# Start only together with facade-models (the verified model download),
+Requires=facade-models.service
+# and only after it has finished, and after the NVIDIA driver helper is up.
+After=facade-models.service nvidia-persistenced.service
+# Never give up restarting, however often it fails.
+StartLimitIntervalSec=0
+
+# [Service]: how to run it, and the limits it runs under.
+[Service]
+# A long-running program: systemd considers it started as soon as it launches.
+Type=simple
+# Run as the unprivileged `facade` system user (no login, no sudo), never as root.
+User=facade
+Group=facade
+# Start in the deployed code folder.
+WorkingDirectory=/opt/facade/src
+# The bearer token arrives on standard input, read from a root-written,
+# facade-only file. It is never on the command line or in the environment,
+# where other programs on the server could read it (e.g. with `ps`).
+StandardInput=file:/etc/facade/worker.bearer
+# Program output goes to the system journal (`facade_server.py logs`).
+StandardOutput=journal
+StandardError=journal
+# A private home directory for the service user.
+Environment=HOME=/var/lib/facade
+# Hugging Face libraries: keep any cache in the service's own directory,
+# never download anything at run time (the weights are already on disk,
+# sha256-checked by facade-models), and send no usage statistics.
+Environment=HF_HOME=/var/lib/facade/hf-home
+Environment=HF_HUB_OFFLINE=1
+Environment=TRANSFORMERS_OFFLINE=1
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+# Let PyTorch grow GPU memory blocks in place, which reduces wasted GPU memory.
+Environment=PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# Python: write log lines at once (not buffered), and do not try to write
+# .pyc cache files into the read-only code folder.
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# No progress bars in the logs.
+Environment=TQDM_DISABLE=1
+# nvidia-uvm: an unprivileged CUDA process under NoNewPrivileges cannot run the
+# setuid nvidia-modprobe that creates /dev/nvidia-uvm on first use, so cuInit
+# fails (999) after every reboot or stop/start. Create it as root first; the
+# leading "-" keeps a failure here (e.g. no nvidia-modprobe binary) non-fatal.
+ExecStartPre=-+/usr/bin/nvidia-modprobe -u -c=0
+# The worker: PhotoGuard's encoder method, on loopback port 8000 only.
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/worker/facade_photoguard_service.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --bind 127.0.0.1 --port 8000
+# If the program stops for any reason, start it again after 5 seconds.
+Restart=always
+RestartSec=5
+# Allow 30 seconds for a clean shutdown before it is killed.
+TimeoutStopSec=30
+# No core dumps: a crash must never write the process's memory (which may
+# hold a photo or the token) to disk.
+LimitCORE=0
+# Files the service creates are readable by the `facade` user only.
+UMask=0077
+# The process and anything it starts can never gain more privileges than
+# it started with (e.g. through a setuid program).
+NoNewPrivileges=yes
+# A private, empty /tmp and /var/tmp that no other program can see.
+PrivateTmp=yes
+# /home, /root and /run/user are invisible to the service.
+ProtectHome=yes
+# /usr, /boot and /etc are read-only for the service.
+ProtectSystem=full
+# The code, venv and Node.js stay read-only even if this process is compromised.
+ReadOnlyPaths=/opt/facade
+
+# [Install]: what `systemctl enable` hooks it into.
+[Install]
+# `systemctl enable` makes it start at every boot.
+WantedBy=multi-user.target

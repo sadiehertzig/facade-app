@@ -1,0 +1,12 @@
+// module.modulemap
+//
+// Tells the Swift compiler that the C header NativeBridge.h (in this folder)
+// is a module called CNative. Any Swift file can then write `import CNative`
+// to use the engine's C functions. NativeBridge.h #includes NativePixels.h,
+// NativeGeometry.h, NativeNetwork.h and NativeProfile.h, so all of their
+// declarations become part of this one module. `export *` also passes on the
+// system modules those headers import (stdint.h, stddef.h) to Swift.
+// The folder holding this file must be on Swift's import search path:
+// SWIFT_INCLUDE_PATHS in FACADE/Config/Base.xcconfig for the app, and -I in
+// app/ios/scripts/run_host_tests.sh for the host tests.
+module CNative { header "NativeBridge.h" export * }

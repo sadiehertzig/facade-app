@@ -1,0 +1,63 @@
+# FACADE server: first-boot model fetch (installed by ../bootstrap.sh).
+# Downloads the pinned SD1.5-inpainting files listed in server/models/MODEL_SHA256SUMS,
+# verifies every sha256, publishes /srv/facade/models/sd15-inpaint-8a4288
+# read-only in one rename, and writes .verified. Once .verified exists this
+# unit is skipped (a skipped condition does not fail units that Require it).
+[Unit]
+# The name shown by `systemctl status` and in the logs.
+Description=FACADE model snapshot fetch (SD1.5 inpainting @ 8a4288, sha256-verified)
+# Start only once the network is up.
+Wants=network-online.target
+After=network-online.target
+# Skip the whole unit once the verified copy exists (see the header).
+ConditionPathExists=!/srv/facade/models/sd15-inpaint-8a4288/.verified
+
+# [Service]: how to run it, and the limits it runs under.
+[Service]
+# A job that runs once to the end, not a long-running program. It has no
+# User= line, so it runs as root, but ProtectSystem=strict below limits
+# its writes to the models folder.
+Type=oneshot
+# Counts as "active" after it finishes, so the services that Require it
+# see it as done.
+RemainAfterExit=yes
+# A throwaway Hugging Face cache next to the models, deleted afterwards.
+Environment=HOME=/srv/facade/models/.hf-home
+Environment=XDG_CACHE_HOME=/srv/facade/models/.hf-home/cache
+Environment=HF_HOME=/srv/facade/models/.hf-home
+# Give up on a stalled download after 60 seconds (it is then retried), and
+# send no usage statistics.
+Environment=HF_HUB_DOWNLOAD_TIMEOUT=60
+Environment=HF_HUB_DISABLE_TELEMETRY=1
+# Python: write log lines at once (not buffered), and do not try to write
+# .pyc cache files into the read-only code folder.
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# As root (+): make sure the models folder exists.
+ExecStartPre=+/usr/bin/install -d -m 0755 /srv/facade/models
+# Download every file listed in MODEL_SHA256SUMS and check its sha256.
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/models/fetch_models.py --sums /opt/facade/src/server/models/MODEL_SHA256SUMS --dest /srv/facade/models/sd15-inpaint-8a4288
+# Delete the download cache once the checked copy is published.
+ExecStartPost=/bin/rm -rf /srv/facade/models/.hf-home
+# About 5.5 GB of weights: allow up to two hours.
+TimeoutStartSec=2h
+# No core dumps: a crash must never write the process's memory (which may
+# hold a photo or the token) to disk.
+LimitCORE=0
+# The process and anything it starts can never gain more privileges than
+# it started with (e.g. through a setuid program).
+NoNewPrivileges=yes
+# A private, empty /tmp and /var/tmp that no other program can see.
+PrivateTmp=yes
+# /home, /root and /run/user are invisible to the service.
+ProtectHome=yes
+# The whole file system is read-only for the service, apart from the paths
+# listed in ReadWritePaths=.
+ProtectSystem=strict
+# The one folder it may write to.
+ReadWritePaths=/srv/facade/models
+
+# [Install]: what `systemctl enable` hooks it into.
+[Install]
+# `systemctl enable` makes it start at every boot.
+WantedBy=multi-user.target
