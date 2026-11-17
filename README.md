@@ -6,22 +6,36 @@ chosen changes to a photo so that these tools work less well on the protected
 copy, and it points people to official help services if their images have
 already been misused.
 
+## Try it
+
+You do not need to build anything to try FACADE:
+
+- **iPhone app (free beta):** install Apple's free
+  [TestFlight](https://apps.apple.com/us/app/testflight/id899247664) app, then
+  open [testflight.apple.com/join/dxMRcMkd](https://testflight.apple.com/join/dxMRcMkd)
+  on your iPhone (iOS 18 or newer). This is the complete app, with its models.
+- **Website:** [facadephotoshield.com](https://facadephotoshield.com) shows what
+  FACADE does to a photo, has a three-minute video, and links to official help
+  services.
+
 FACADE has three parts:
 
 - **An iPhone app** that protects a photo on the phone itself. Nothing is
   uploaded.
-- **A website** where you crop a photo, mark the area an editor might replace,
-  and (with your consent) send it to the team's GPU server to apply
-  [PhotoGuard](https://github.com/MadryLab/photoguard).
-- **A GPU server** that runs the PhotoGuard engine for the website, plus a
-  hosted copy of the original PhotoGuard demo.
+- **A website** that explains FACADE, links to the app and to help services,
+  and links to the hosted PhotoGuard demo below. The `web/` folder also holds an
+  upload-and-protect workspace that sends a photo (with your consent) to the
+  GPU server; it is not shown on the live site.
+- **A GPU server** that runs
+  [PhotoGuard](https://github.com/MadryLab/photoguard): a hosted copy of the
+  original PhotoGuard demo, and the worker the website's workspace uses. The
+  demo asks for a password, because it runs real AI edits on uploaded photos.
 
 Protection is experimental and never guaranteed. Please keep everything we
 write, in the app, on the website and in this repository, honest about that.
 
 FACADE is a student project built for the 2026 Congressional App Challenge.
-The live site is [facadephotoshield.com](https://facadephotoshield.com). This
-repository holds the code of the app, the website and the server, with
+This repository holds the code of the app, the website and the server, with
 comments written so that someone who has never seen the project can follow it.
 The research behind the numbers we quote (hundreds of measured experiments)
 lives in a separate, much larger repository and is not needed to read or run
@@ -50,8 +64,8 @@ block that explains what it does and where it fits.
    the second, smaller method, aimed at AI clothing edits, run through Core ML.
 6. [`web/lib/processor.ts`](web/lib/processor.ts) and
    [`server/worker/facade_photoguard_encoder.py`](server/worker/facade_photoguard_encoder.py):
-   how the website hands a photo to the GPU server, and the PhotoGuard attack
-   the server runs on it.
+   how the website's workspace hands a photo to the GPU server, and the
+   PhotoGuard attack the server runs on it.
 
 ## How the protection works, in one paragraph
 
@@ -61,7 +75,7 @@ FACADE runs the same kind of recognition network on the phone, in the opposite
 direction: it nudges the pixels of your face, a little at a time, so that the
 identity the network reads out stops matching you, while a limit on each pixel
 and a mask around the face keep the photo looking the same to a person. The
-result is saved as a new copy; the original is never changed. The website's
+result is saved as a new copy; the original is never changed. The server's
 method (PhotoGuard, by MIT's Madry Lab) does the same idea against the image
 encoder of Stable Diffusion, so AI edits of the protected copy come out
 broken. Neither method is a guarantee: we measure how often it works on
@@ -89,9 +103,10 @@ The website is public. Only the hosted PhotoGuard demo under `/photoguard/`
 asks for the team password. The iPhone app protects photos on the phone and
 does not send them to the server; it can only open the website in a browser.
 
-## Running each part (for teammates)
+## How to run it
 
-You only need the tools for the part you work on.
+To just use FACADE, see [Try it](#try-it). To run the code yourself, you only
+need the tools for the part you want to run.
 
 **Website** (Node.js 22 or newer). No GPU needed: a pretend worker stands in
 for the server.
@@ -120,8 +135,11 @@ open app/ios/FACADE.xcodeproj            # then pick the FACADE scheme and press
 ```
 
 The app builds and runs without its models, but the protection buttons stay off
-until the models are installed. The models are not in this repository; see
-[`app/ios/Models/README.md`](app/ios/Models/README.md).
+until the models are installed. The models are not in this repository: some
+are derived from face models whose licences allow non-commercial research use
+only, so we cannot publish them. Teammates get them privately; see
+[`app/ios/Models/README.md`](app/ios/Models/README.md). Everyone else can use
+the complete app through the [TestFlight beta](#try-it).
 
 **The server itself** is updated only by the project owner, from `main`, with
 `deploy/facade_server.py`. You do not need AWS access to work on any part of
@@ -165,10 +183,12 @@ you commit and check that only the files you meant to change are listed.
 FACADE's own code, and the FACADE app icon made by the team, are released under
 the [MIT License](LICENSE).
 
-The website's online protection and the hosted demo are built on
+The server's PhotoGuard worker and the hosted demo are built on
 [PhotoGuard](https://github.com/MadryLab/photoguard) by Hadi Salman, Alaa
 Khaddaj, Guillaume Leclerc, Andrew Ilyas and Aleksander Madry (MIT). FACADE is
 not affiliated with its authors. The server uses Stable Diffusion 1.5 weights,
 which come with use restrictions (CreativeML OpenRAIL-M) that everyone using the
-website or demo must follow. Every third-party component and its license is
-listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
+website or demo must follow. Third-party components keep their own licenses;
+each one is listed in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md), with
+the license texts in [`licenses/`](licenses/). Model weights are not included
+in this repository.
