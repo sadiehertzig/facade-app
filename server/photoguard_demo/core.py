@@ -51,6 +51,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import threading
 import time
 from contextlib import nullcontext
 from pathlib import Path
@@ -497,8 +498,10 @@ def load_pipeline(snapshot, *, device="cuda", env: Mapping[str, str] | None = No
 class PhotoGuardDemo:
     """Holds the loaded pipeline and the target latent, which is computed once.
 
-    One instance serves every user of the demo. The Gradio queue in app.py
-    runs one request at a time, so calls never overlap on the GPU.
+    One instance serves every user of both pages: the full demo (app.py) and
+    the public sample mode (sample.py). Each page's Gradio queue runs one
+    request at a time, and `gpu_lock` makes the two pages take turns, so calls
+    never overlap on the GPU.
     """
 
     def __init__(self, pipe, *, device="cuda", dtype=torch.float16, pgd_iters: int = PGD_ITERS):
@@ -506,6 +509,7 @@ class PhotoGuardDemo:
         self.device = torch.device(device)
         self.dtype = dtype
         self.pgd_iters = pgd_iters
+        self.gpu_lock = threading.Lock()
         self.safety_checker = getattr(pipe, "safety_checker", None) is not None
         self.targets = compute_target_latent(pipe.vae, self.device, self.dtype)
 
@@ -625,8 +629,10 @@ class PhotoGuardDemo:
         if mask is None:
             raise InputError(NEED_PAINT)
         prompt = "" if prompt is None else str(prompt).strip()
-        return self._run(image, mask, prompt, parse_seed(seed), parse_steps(steps), parse_guidance(guidance),
-                         progress, self.pgd_iters)
+        seed, steps, guidance = parse_seed(seed), parse_steps(steps), parse_guidance(guidance)
+        # The settings are checked first, so a bad request never waits for the GPU.
+        with self.gpu_lock:
+            return self._run(image, mask, prompt, seed, steps, guidance, progress, self.pgd_iters)
 
     def warmup(self):
         """One PGD step and a one-step edit on a synthetic image, to exercise every GPU path.

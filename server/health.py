@@ -5,6 +5,8 @@ Checks, and prints ONE JSON line to stdout (journald) with the verdict:
   web     GET http://127.0.0.1:3000/ answers 2xx/3xx (the Next.js website is up)
   demo    GET http://127.0.0.1:7860/photoguard/ answers 2xx/3xx (Gradio is up and
           serves the /photoguard sub-path Caddy forwards to it)
+  sample  GET http://127.0.0.1:7861/photoguard-sample/ answers 2xx/3xx (the same
+          program's public sample mode is up under its own sub-path)
   worker  GET http://127.0.0.1:8000/v1/capabilities with the bearer reports the
           exact capabilities the website requires (ready, gpu_smoke_validated
           after the start-up self-test, recipe photoguard-encoder-linf-v1, 512,
@@ -150,6 +152,7 @@ def run_checks(args, bearer: str | None) -> dict:
     checks: dict = {}
     checks["web"] = _guarded(lambda: evaluate_page(http_get(args.web_url, timeout=args.timeout)[0]))
     checks["demo"] = _guarded(lambda: evaluate_page(http_get(args.demo_url, timeout=args.timeout)[0]))
+    checks["sample"] = _guarded(lambda: evaluate_page(http_get(args.sample_url, timeout=args.timeout)[0]))
     if bearer is None:
         # Without the bearer the worker cannot be asked, so it counts as down.
         checks["worker"] = {"ok": False, "error": "bearer_unreadable"}
@@ -174,6 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--web-url", default="http://127.0.0.1:3000/")
     parser.add_argument("--demo-url", default="http://127.0.0.1:7860/photoguard/")
+    parser.add_argument("--sample-url", default="http://127.0.0.1:7861/photoguard-sample/")
     parser.add_argument("--worker-url", default="http://127.0.0.1:8000/v1/capabilities")
     parser.add_argument("--bearer-file", type=Path, default=Path("/etc/facade/worker.bearer"))
     parser.add_argument("--public-host", default=os.environ.get("FACADE_HOST", ""))
@@ -183,7 +187,7 @@ def main(argv: list[str] | None = None) -> int:
                         help="poll every 10 s until healthy or this many seconds pass")
     args = parser.parse_args(argv)
     # A missing or malformed bearer file fails only the worker and public
-    # checks; the web and demo checks still run.
+    # checks; the web, demo and sample checks still run.
     try:
         bearer = read_bearer(args.bearer_file)
     except Exception:

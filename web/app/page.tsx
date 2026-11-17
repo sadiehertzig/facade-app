@@ -14,8 +14,10 @@
 // visitor's browser, which it must, because the selected tab is state that
 // changes when the visitor clicks. No photo is uploaded from this page. Photos
 // are protected in the iPhone app, or in the full PhotoGuard demo at
-// /photoguard/, a separate app on the team's server. The in-site upload
-// workspace (components/protection-workspace.tsx) is not shown on this page.
+// /photoguard/ (password), a separate app on the team's server. Anyone can try
+// that demo on the team's sample faces at /photoguard-sample/ (no uploads). The
+// in-site upload workspace (components/protection-workspace.tsx) is not shown
+// on this page.
 //
 // The text on this page is careful by design: protection is described as
 // experimental, and every number shown comes from a measurement.
@@ -43,8 +45,13 @@ import { OPENRAIL_LICENSE_URL } from "@/lib/protection-recipe";
 
 // The full PhotoGuard demo (server/photoguard_demo) is a separate Gradio app.
 // On the server, Caddy sends /photoguard/ to it; it is not part of this Next.js app.
+// It accepts any photo and prompt, so it asks for the team password.
 // ?__theme=light keeps Gradio in light mode to match this site.
 const PHOTOGUARD_DEMO_URL = "/photoguard/?__theme=light";
+// The same demo's public sample mode (server/photoguard_demo/sample.py): only the
+// team's AI-generated sample faces and a few preset edits, 3 runs per visitor per
+// day, no password and no uploads.
+const PHOTOGUARD_SAMPLE_URL = "/photoguard-sample/?__theme=light";
 
 // Public TestFlight link for the iPhone beta (FACADE Photo Shield on App Store Connect).
 const TESTFLIGHT_URL = "https://testflight.apple.com/join/dxMRcMkd";
@@ -188,8 +195,11 @@ export default function Home() {
             <a href="https://github.com/MadryLab/photoguard" target="_blank" rel="noreferrer">
               Read the PhotoGuard research <ArrowUpRight size={16} />
             </a>
+            <a href={PHOTOGUARD_SAMPLE_URL}>
+              Try PhotoGuard on our sample faces <ArrowUpRight size={16} />
+            </a>
             <a href={PHOTOGUARD_DEMO_URL}>
-              Try the full PhotoGuard demo <ArrowUpRight size={16} />
+              Full PhotoGuard demo (password) <ArrowUpRight size={16} />
             </a>
           </div>
         </TabsContent>
@@ -342,9 +352,11 @@ function HowItWorks() {
   );
 }
 
-// The one PhotoGuard entry point on the site: the full upstream demo on our GPU
+// The one PhotoGuard entry point on the site: the upstream demo on our GPU
 // server (server/photoguard_demo), which protects a photo and then runs the same
-// AI edit on the original and on the protected copy.
+// AI edit on the original and on the protected copy. Anyone can run it on our
+// sample faces (PHOTOGUARD_SAMPLE_URL); uploading your own photo needs the
+// password (PHOTOGUARD_DEMO_URL).
 //
 // The example is one run of that demo's code (PhotoGuardDemo.compare, pinned SD 1.5
 // inpainting snapshot, seed 1234, 100 steps, guidance 7.5, 200 PGD steps) on the
@@ -357,9 +369,9 @@ function PhotoGuardSection() {
         <h2 id="demo-heading">Full PhotoGuard, on our server</h2>
         <p>
           PhotoGuard is MIT research that protects a photo against AI editors like Stable Diffusion, which can repaint part of a
-          picture, such as clothing or the background. Our GPU server runs it: you upload a photo, paint the part to keep and describe
-          an edit. It protects the photo, then runs the same edit on the original and on the protected copy so you can compare them.
-          A run takes about a minute.
+          picture, such as clothing or the background. Our GPU server runs it: pick one of our sample faces and an AI edit, and it
+          protects the photo, then runs the same edit on the original and on the protected copy so you can compare them. A run takes
+          about a minute.
         </p>
       </div>
       <div className="example-tiles pg-tiles">
@@ -374,13 +386,19 @@ function PhotoGuardSection() {
         Mac. Results vary with the photo and the prompt.
       </p>
       <div className="pg-actions">
-        <a className="demo-link" href={PHOTOGUARD_DEMO_URL}>
-          Open full PhotoGuard <ArrowUpRight size={16} />
-        </a>
+        <div className="pg-links">
+          <a className="demo-link" href={PHOTOGUARD_SAMPLE_URL}>
+            Try it on our sample faces <ArrowUpRight size={16} />
+          </a>
+          <a className="demo-link demo-link-secondary" href={PHOTOGUARD_DEMO_URL}>
+            Use your own photo (password) <ArrowUpRight size={16} />
+          </a>
+        </div>
         <p className="demo-note">
-          The live demo needs a password, because it runs real AI edits on uploaded photos. Contest judges can ask us for access. Only
-          upload photos of yourself, or of people who have agreed to it. The demo runs Stable Diffusion 1.5; by using it you agree to
-          follow the model&apos;s{" "}
+          Anyone can try it on our two AI-generated sample faces with a few preset edits: 3 runs per visitor per day, one run at a
+          time on our server. Using your own photo and your own words needs a password, because that runs real AI edits on uploaded
+          photos; contest judges can ask us for access. Only upload photos of yourself, or of people who have agreed to it. The demo
+          runs Stable Diffusion 1.5; by using it you agree to follow the model&apos;s{" "}
           <a href={OPENRAIL_LICENSE_URL} target="_blank" rel="noreferrer">
             use restrictions (CreativeML OpenRAIL-M)
           </a>

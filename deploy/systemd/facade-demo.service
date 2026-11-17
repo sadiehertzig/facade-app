@@ -2,13 +2,20 @@
 # (immunize + SD1.5-inpainting edit comparison, server/photoguard_demo/).
 # Loopback only; Caddy serves it at https://$FACADE_HOST/photoguard/ behind
 # basic_auth, so it runs with --root-path /photoguard.
+# The same program also serves the PUBLIC sample mode (sample.py: the team's
+# sample faces and preset edits only, no uploads) on 127.0.0.1:7861, which
+# Caddy serves at https://$FACADE_HOST/photoguard-sample/ without a password.
+# Both pages share the one loaded model and take turns on the GPU. The sample
+# mode's daily run counts (3 per visitor, 150 in all, no IP addresses; see
+# server/photoguard_demo/quota.py) are kept in /var/lib/facade/sample-quota/ so
+# a restart does not reset them.
 # Gradio temp files go to the instance-store NVMe (/opt/dlami/nvme, wiped on
 # stop/start) when it is mounted, else /var/tmp/facade-gradio. The directory is
 # emptied on every start and stop; ExecStartPre writes the choice to
 # /run/facade-demo.env, which overrides the Environment= default below.
 [Unit]
 # The name shown by `systemctl status` and in the logs.
-Description=FACADE upstream PhotoGuard demo (Gradio, 127.0.0.1:7860)
+Description=FACADE upstream PhotoGuard demo (Gradio, 127.0.0.1:7860; public sample mode 127.0.0.1:7861)
 # Start only together with facade-models (the verified model download),
 Requires=facade-models.service
 # and only after it has finished, and after the NVIDIA driver helper is up.
@@ -61,8 +68,9 @@ ExecStartPre=-+/usr/bin/nvidia-modprobe -u -c=0
 # /var/tmp), wipe any old one, create it for `facade` only, and record the
 # choice in /run/facade-demo.env. ($$ is how a unit file writes a literal $.)
 ExecStartPre=+/bin/sh -c 'd=/var/tmp/facade-gradio; if mountpoint -q /opt/dlami/nvme; then d=/opt/dlami/nvme/facade-gradio; fi; rm -rf /opt/dlami/nvme/facade-gradio /var/tmp/facade-gradio; install -d -m 0700 -o facade -g facade "$$d"; echo "GRADIO_TEMP_DIR=$$d" > /run/facade-demo.env'
-# The demo: the PhotoGuard Gradio app, on loopback port 7860 only.
-ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/photoguard_demo/app.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --host 127.0.0.1 --port 7860 --root-path /photoguard
+# The demo: the PhotoGuard Gradio app on loopback port 7860, and its public
+# sample mode on loopback port 7861 with its counts file.
+ExecStart=/opt/facade/venv/bin/python /opt/facade/src/server/photoguard_demo/app.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --host 127.0.0.1 --port 7860 --root-path /photoguard --sample-port 7861 --sample-root-path /photoguard-sample --quota-file /var/lib/facade/sample-quota/counts.json --runs-per-visitor 3 --runs-per-day 150
 # As root (+): delete every temporary upload when the demo stops.
 ExecStopPost=+/bin/rm -rf /opt/dlami/nvme/facade-gradio /var/tmp/facade-gradio
 # If the program stops for any reason, start it again after 5 seconds.

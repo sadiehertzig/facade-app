@@ -19,7 +19,7 @@
 </head>
 <body>
 <h1>FACADE Photo Shield: Privacy Policy</h1>
-<p class="muted">Effective September 23, 2026</p>
+<p class="muted">Effective September 23, 2026. Updated November 17, 2026.</p>
 
 <p>FACADE Photo Shield ("FACADE") is a student project built for the 2026
 Congressional App Challenge. It explores experimental ways to make photos harder
@@ -38,9 +38,16 @@ and information.</p>
 
 <h2>The FACADE website and PhotoGuard demo</h2>
 <ul>
-  <li>The website is a private, password-protected research site run by the team.</li>
+  <li>The website is public. The full PhotoGuard demo, where you can upload your own
+      photo, is password-protected.</li>
   <li>If you choose to process a photo there, it is sent over an encrypted (HTTPS)
       connection to the team's private server, hosted by Amazon Web Services.</li>
+  <li>The public PhotoGuard sample page works only on the team's AI-generated sample
+      faces; you cannot upload a photo there. To allow each visitor 3 runs a day, the
+      server keeps a count of runs for the current day under a short code made from
+      your IP address with a secret key that changes every day. Your IP address itself
+      is not stored, and many addresses share each code, so it cannot be turned back
+      into yours. The counts are deleted shortly after midnight UTC.</li>
   <li>Photos are processed in memory and deleted automatically afterwards. The
       protection service keeps a job for at most 30 minutes; the demo's temporary
       files are deleted within about 15 minutes.</li>

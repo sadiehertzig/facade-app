@@ -95,6 +95,7 @@ REQUIRED_FILES = (
     "deploy/Caddyfile",
     "server/worker/facade_photoguard_service.py",
     "server/photoguard_demo/app.py",
+    "server/photoguard_demo/sample.py",
     "server/models/fetch_models.py",
     "server/health.py",
     "web/package.json",
@@ -898,11 +899,12 @@ def wait_ready(host: str, token: str, *, timeout: float) -> dict[str, Any]:
         _sleep(POLL_SECONDS * 1.5)
 
 
-# The three public addresses and how each is protected.
+# The four public addresses and how each is protected.
 def print_urls(host: str) -> None:
     print(
         f"\n  website (public):              https://{host}/\n"
         f"  PhotoGuard demo (basic auth):  https://{host}/photoguard/\n"
+        f"  PhotoGuard sample (public):    https://{host}/photoguard-sample/\n"
         f"  worker API (bearer):           https://{host}/v1/capabilities"
     )
 
@@ -942,7 +944,8 @@ def cmd_deploy(args: argparse.Namespace) -> int:
 
 
 # status: the instance, its hostname, whether the worker is ready, and whether
-# the website answers 200 (public) and the demo 401 (Caddy asks for a password).
+# the website answers 200 (public), the demo 401 (Caddy asks for a password) and
+# the demo's sample mode 200 (public, sample faces only).
 def cmd_status(args: argparse.Namespace) -> int:
     require_identity()
     instance = find_instance()
@@ -970,6 +973,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     for name, url, expected, good in (
         ("website", f"https://{host}/", "200", "up, public"),
         ("demo", f"https://{host}/photoguard/", "401", "up, password protected"),
+        ("sample demo", f"https://{host}/photoguard-sample/", "200", "up, public, sample faces only"),
     ):
         code = page_status(url)
         meaning = good if code == expected else f"unexpected: expected {expected}"

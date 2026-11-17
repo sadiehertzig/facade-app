@@ -7,6 +7,7 @@ us-east-1). Caddy serves everything on one hostname with automatic HTTPS:
 |---|---|---|---|
 | `https://<host>/` | the FACADE website (`web/`) | `facade-web`, Next.js on 127.0.0.1:3000 | public; PhotoGuard runs rate-limited per visitor (`web/lib/quota.ts`) |
 | `https://<host>/photoguard/` | the PhotoGuard demo (`server/photoguard_demo/`) | `facade-demo`, Gradio on 127.0.0.1:7860 | basic auth (user `owner`) |
+| `https://<host>/photoguard-sample/` | the same demo's public sample mode (`server/photoguard_demo/sample.py`): sample faces and preset edits only, no uploads | `facade-demo`, Gradio on 127.0.0.1:7861 | public; 3 runs per visitor and 150 in all per UTC day (`server/photoguard_demo/quota.py`) |
 | `https://<host>/v1/...` | the PhotoGuard worker API (`server/worker/`) | `facade-worker` on 127.0.0.1:8000 | the worker's own bearer token |
 
 The website calls the worker directly on 127.0.0.1:8000. `/v1` is also reachable
@@ -55,9 +56,10 @@ python3 deploy/facade_server.py ssh                          # a root-capable sh
 python3 deploy/facade_server.py ssh --forward 7860           # then open http://localhost:7860/photoguard/
 ```
 
-`status` also checks that `/` answers 200 (the website is public) and that
+`status` also checks that `/` answers 200 (the website is public), that
 `/photoguard/` answers 401 without a password, which means Caddy is up and
-basic auth is still in front of the demo.
+basic auth is still in front of the demo, and that `/photoguard-sample/`
+answers 200 (the public sample mode is up).
 
 ### What `deploy` does
 
@@ -126,6 +128,7 @@ python3 deploy/facade_server.py deploy
 | `/opt/facade/venv` | Python 3.12 with torch, diffusers and gradio |
 | `/opt/facade/node` | Node.js 22 LTS |
 | `/srv/facade/models/sd15-inpaint-8a4288` | the Stable Diffusion 1.5 inpainting weights, downloaded and sha256-checked by `facade-models` |
+| `/var/lib/facade/sample-quota/counts.json` | the sample mode's run counts for the current UTC day (no IP addresses; emptied after midnight UTC) |
 | `/etc/facade/` | `worker.bearer`, `web.env`, `host.env` |
 | `/var/log/facade-bootstrap.log` | the log of every bootstrap run |
 
@@ -139,6 +142,13 @@ every security restriction, line by line.
 - **Uploads.** Caddy allows 12 MB per request on `/v1` and the website and
   64 MB on the demo, whose image editor re-uploads full-size photos.
   `MAX_FILE_SIZE` in `server/photoguard_demo/app.py` must match the Caddyfile.
+  The public sample mode takes no uploads: Caddy refuses its upload endpoint
+  and anything over 64 KB.
+- **One GPU, two pages.** The demo and its sample mode are one program with
+  one copy of the model; they take turns on the GPU. A sample run waits for a
+  full-demo run and the other way round. Turn the sample mode off by removing
+  the `--sample-*`, `--quota-file` and `--runs-*` options from
+  `facade-demo.service` and its route from the Caddyfile.
 - **Reboots.** The worker and demo run as the unprivileged `facade` user. A
   root step before each start (`nvidia-modprobe -u -c=0`) creates
   `/dev/nvidia-uvm`; without it CUDA fails after a reboot.

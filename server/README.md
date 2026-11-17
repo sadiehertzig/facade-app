@@ -10,7 +10,7 @@ it; `deploy/README.md` explains the server itself.
 | `worker/facade_photoguard_private_session.py` | the job session layer: the start-up self-test and the output checks every job gets |
 | `worker/facade_photoguard_encoder.py` | **the engine**: PhotoGuard's encoder attack on the Stable Diffusion VAE (200 PGD steps) |
 | `worker/facade_photoguard_diffusion.py` | PhotoGuard's full diffusion attack (not used by the server today) and PNG helpers the encoder shares |
-| `photoguard_demo/` | **the demo program** (`facade-demo`): a Gradio port of the official PhotoGuard demo with phone uploads (HEIC too) and downloads for slides, see its README |
+| `photoguard_demo/` | **the demo program** (`facade-demo`): a Gradio port of the official PhotoGuard demo with phone uploads (HEIC too) and downloads for slides, plus its public sample mode (the team's sample faces and preset edits only, 3 runs per visitor per day), see its README |
 | `models/fetch_models.py`, `models/MODEL_SHA256SUMS` | downloads the pinned Stable Diffusion 1.5 inpainting weights and checks every sha256 |
 | `health.py` | the check `facade-health` runs every minute |
 | `requirements-gpu.lock.txt` | exact versions of the Python packages on the server (torch and gradio are pinned in `deploy/bootstrap.sh`) |

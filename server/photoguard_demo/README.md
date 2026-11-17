@@ -22,12 +22,58 @@ image, made with the same seed.
   `python app.py --snapshot /srv/facade/models/sd15-inpaint-8a4288 --host 127.0.0.1 --port 7860`.
   On the server, Caddy serves it at `https://<host>/photoguard/`, so
   `deploy/systemd/facade-demo.service` adds `--root-path /photoguard`.
-- Tests: `server/tests/test_photoguard_demo_core.py` and
-  `server/tests/test_photoguard_demo_export.py`. They run on CPU with a fake
+- `sample.py`: the **public sample mode**, started by `app.py` when it gets
+  `--sample-port` (see below). No gradio or torch at import time.
+- `quota.py`: the sample mode's daily run limits, saved to a file. Standard
+  library only.
+- `samples/`: the two sample faces and their keep masks (see its README).
+- Tests: `server/tests/test_photoguard_demo_core.py`,
+  `server/tests/test_photoguard_demo_export.py`,
+  `server/tests/test_photoguard_demo_sample.py` and
+  `server/tests/test_photoguard_demo_quota.py`. They run on CPU with a fake
   pipeline and need neither gradio nor model weights. The HEIC decode test reads
   `server/tests/fixtures/photoguard-orientation6.heic` (595 bytes, encoded on
   macOS like an iPhone photo: pixels stored sideways plus a rotation) and runs
   wherever pi-heif or pillow-heif is installed, as on the server.
+
+## Public sample mode
+
+The full demo accepts any photo and any prompt, so it stays behind the team
+password: an open upload box with free-text Stable Diffusion inpainting would be
+a free tool for AI-editing anyone's photo. The sample mode is the public
+alternative, at `https://<host>/photoguard-sample/`:
+
+- **Sample faces only.** Visitors pick one of the two faces in `samples/`
+  (AI-generated pictures of fictional people, the ones the website shows), one
+  of five preset edits (`PROMPTS` in `sample.py`) and a seed. There is no upload
+  component and no text box. Each face has a fixed keep mask (face and hair),
+  drawn as an outline on the preview. Gradio's own choice check refuses any
+  other value before `sample.py` sees it, and `sample.py` checks again.
+- **Same code, model and settings** as the full demo: the same loaded
+  `PhotoGuardDemo`, 100 steps, guidance 7.5, the safety checker on.
+- **Limits.** 3 runs per visitor and 150 in all per UTC day (`quota.py`; the
+  unit passes `--runs-per-visitor 3 --runs-per-day 150`). A run counts when it
+  is accepted; if the server fails, it is given back. The counts are kept in
+  `--quota-file`, so a restart does not reset them. No IP address is stored:
+  each visitor is a 6-character code (24 bits of an HMAC under a secret that
+  changes daily), and the file is emptied shortly after midnight UTC. The
+  visitor's address is the last `X-Forwarded-For` entry, trusted only from a
+  loopback peer (the local Caddy); IPv6 visitors count by their /64.
+- **One run at a time.** Both pages share the GPU through
+  `PhotoGuardDemo.gpu_lock`. A click first goes through `join()`, which answers
+  at once: it counts the run and says how many runs are ahead and roughly how
+  long it will take (about 50 s each). Then `run()` waits in Gradio's queue,
+  which shows its place in line and a timer on the results. At 10 runs in line,
+  new ones are turned away and not counted. `run()` takes only a server-side
+  token from `join()`, so a script calling it directly can run nothing that
+  `join()` did not check and count.
+- **No uploads.** Besides having no upload component, the page caps Gradio's
+  file limit at 1 kB, and Caddy refuses its upload endpoint and any request
+  over 64 KB.
+
+Run it locally next to the full demo:
+`python app.py --snapshot ... --sample-port 7861` (add `--quota-file counts.json`
+to keep counts across restarts), then open `http://127.0.0.1:7861/`.
 
 ## Provenance
 

@@ -3,8 +3,9 @@
 A [Next.js](https://nextjs.org) app. It has three tabs:
 
 - **Home**: the FACADE iPhone app and how to get it, the demo video, a worked
-  face-swap example, and a link to the full PhotoGuard demo at `/photoguard/`
-  on the team's GPU server.
+  face-swap example, and links to the PhotoGuard demo on the team's GPU
+  server: its public sample mode at `/photoguard-sample/` and the full demo
+  (password) at `/photoguard/`.
 - **Get help**: support services for people whose images were misused.
 - **Our approach**: what FACADE does and what we have measured.
 
@@ -87,8 +88,9 @@ one job at a time, so a second upload gets "busy" until you clear the first job
 (or two minutes after you download its result).
 
 Without a worker (leave `FACADE_PROCESSOR_URL` empty) the site still runs; it
-just says online processing is unavailable. The `/photoguard/` link only works
-on the real server, where Caddy sends it to the separate PhotoGuard demo.
+just says online processing is unavailable. The `/photoguard/` and
+`/photoguard-sample/` links only work on the real server, where Caddy sends
+them to the separate PhotoGuard demo.
 
 To try the real GPU server instead, set `FACADE_PROCESSOR_URL` to
 `https://<server host>` and `FACADE_PROCESSOR_TOKEN` to the worker's bearer

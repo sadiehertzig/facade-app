@@ -1142,6 +1142,13 @@ footer {
   border-top: 1px solid var(--border);
 }
 
+.pg-links {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
 .pg-actions .demo-note {
   font-size: 13px;
   line-height: 1.6;
@@ -1474,6 +1481,16 @@ footer a {
 
 .demo-link:hover {
   background: var(--brand-midnight);
+}
+
+/* The second, quieter demo link: navy text on the sky tint. */
+.demo-link-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.demo-link-secondary:hover {
+  background: var(--muted);
 }
 
 .research-disclosure a {

@@ -5,7 +5,8 @@
 # 80 and 443). It gets and renews the HTTPS certificate by itself, then passes
 # each request to one of three programs that listen only on the server's own
 # loopback address (127.0.0.1), which outside computers cannot reach directly:
-# the website, the PhotoGuard demo and the PhotoGuard worker.
+# the website, the PhotoGuard demo (two pages, one program) and the PhotoGuard
+# worker.
 #
 # FACADE_HOST comes from /etc/facade/host.env (SSM /facade/prod/host) through
 # the caddy.service drop-in; it is substituted before parsing. It is
@@ -25,6 +26,14 @@
 #                                      basic_auth. The path is passed through
 #                                      unchanged; the demo runs with
 #                                      --root-path /photoguard.
+#   /photoguard-sample/*
+#                   -> 127.0.0.1:7861  the same demo program's public sample
+#                                      mode (server/photoguard_demo/sample.py):
+#                                      the team's sample faces and preset
+#                                      edits only, 3 runs per visitor per day.
+#                                      PUBLIC (no basic auth). It has no upload
+#                                      component, and Gradio's upload endpoint
+#                                      is refused here as well.
 #   /privacy        -> deploy/public/privacy.html, a static page served by Caddy
 #                                      itself. PUBLIC (no basic auth) so Apple's
 #                                      reviewers can read the privacy policy.
@@ -39,8 +48,9 @@
 # never the password itself.
 #
 # Request bodies: 12MB on /v1 (the worker itself caps at 4 MiB), 64MB for the
-# demo (full-resolution editor uploads), 12MB for the website (its API routes
-# cap uploads at 4 MiB).
+# demo (full-resolution editor uploads), 64KB for the sample mode (it receives
+# only small JSON messages), 12MB for the website (its API routes cap uploads
+# at 4 MiB).
 #
 # There is deliberately no `log` directive: no access log is written.
 # reverse_proxy has no read/write timeout by default, streams text/event-stream
@@ -85,7 +95,29 @@
 		}
 	}
 
-	# The privacy policy is the one public page (Apple's TestFlight and App Store
+	# The public sample mode of the PhotoGuard demo (no password), under its own
+	# prefix (its --sample-root-path); send the bare path there too.
+	redir /photoguard-sample /photoguard-sample/ 308
+
+	handle /photoguard-sample/* {
+		# Visitors pick a sample face, an edit and a seed; nothing they send is
+		# larger than a few hundred bytes, so refuse anything over 64KB.
+		request_body {
+			max_size 64KB
+		}
+		# No photos may be uploaded here: refuse Gradio's upload endpoint (and its
+		# progress endpoint) before the request reaches the demo. The demo also
+		# limits files on this page to 1 kB (NO_UPLOADS in sample.py).
+		@upload path /photoguard-sample/gradio_api/upload*
+		respond @upload 403
+		# flush_interval -1, as for the full demo: queue position and progress
+		# updates reach the browser at once.
+		reverse_proxy 127.0.0.1:7861 {
+			flush_interval -1
+		}
+	}
+
+	# The privacy policy must stay public (Apple's TestFlight and App Store
 	# reviewers must be able to open it). It is a self-contained static file from
 	# this repository, served directly by Caddy: no website code, no photos, no auth.
 	redir /privacy/ /privacy 308

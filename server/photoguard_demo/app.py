@@ -7,6 +7,10 @@ sends no analytics. See README.md for provenance and the changes from upstream.
 
 On the server, Caddy serves it at https://<host>/photoguard/, so the service passes
 --root-path /photoguard. Run it locally without --root-path.
+
+With --sample-port, the same process also serves the public sample mode
+(sample.py: the team's sample faces and preset edits only, a daily limit per
+visitor) on that port. Both pages share one loaded model and take turns on the GPU.
 """
 # The docstring above doubles as the --help text, so the longer explanation is
 # kept in these comments.
@@ -20,7 +24,8 @@ On the server, Caddy serves it at https://<host>/photoguard/, so the service pas
 # network access BEFORE gradio or diffusers are imported, load the model from
 # the local snapshot, run a tiny warm-up on the GPU, then build the page and
 # start listening. All model and attack code is in core.py; this file is only
-# the page.
+# the page. With --sample-port, the public sample mode (sample.py) is started
+# first, in background threads, on its own port; it uses the same loaded model.
 #
 # Two kinds of browser-side JavaScript are passed to Gradio as strings:
 # ROUTE_PHOTOS_JS (every photo goes through the Choose photo button) and
@@ -197,7 +202,30 @@ def parse_args(argv=None):
     parser.add_argument("--root-path", default="", type=root_path,
                         help="public URL prefix when served behind a proxy, e.g. /photoguard (default: none)")
     parser.add_argument("--no-warmup", action="store_true", help="skip the one-step GPU warm-up at startup")
-    return parser.parse_args(argv)
+    sample = parser.add_argument_group("public sample mode (sample.py; off unless --sample-port is given)")
+    sample.add_argument("--sample-port", type=int, default=None,
+                        help="also serve the public sample mode on --host at this port, e.g. 7861")
+    sample.add_argument("--sample-root-path", default="", type=root_path,
+                        help="its public URL prefix behind a proxy, e.g. /photoguard-sample (default: none)")
+    sample.add_argument("--quota-file", type=Path, default=None,
+                        help="file that keeps today's run counts across restarts (default: memory only)")
+    sample.add_argument("--runs-per-visitor", type=positive, default=3, help="runs per visitor per UTC day")
+    sample.add_argument("--runs-per-day", type=positive, default=150, help="runs per UTC day for everyone")
+    args = parser.parse_args(argv)
+    if args.sample_port is not None and args.sample_port == args.port:
+        parser.error("--sample-port must differ from --port")
+    return args
+
+
+def positive(value: str) -> int:
+    """A whole number of at least 1."""
+    try:
+        number = int(value)
+    except ValueError:
+        number = 0
+    if number < 1:
+        raise argparse.ArgumentTypeError("use a whole number of at least 1")
+    return number
 
 
 def root_path(value: str) -> str:
@@ -462,6 +490,13 @@ def main(argv=None):
         demo.warmup()
 
     import gradio as gr
+
+    if args.sample_port is not None:
+        # The public page first: it returns at once and keeps serving in background threads.
+        from photoguard_demo import sample
+        sample.start(gr, core, demo, host=args.host, port=args.sample_port, root_path=args.sample_root_path,
+                     quota_file=args.quota_file, per_visitor=args.runs_per_visitor, per_day=args.runs_per_day,
+                     css=CSS, export_root=export_root, settings=run_settings(core))
 
     ui = build_ui(gr, core, demo)
     # One run at a time on the GPU, at most 8 visitors waiting, and no public

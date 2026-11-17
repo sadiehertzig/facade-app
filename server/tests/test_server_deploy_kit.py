@@ -50,7 +50,9 @@ SNAPSHOT = "/srv/facade/models/sd15-inpaint-8a4288"
 WORKER_EXEC = (f"{VENV_PY} /opt/facade/src/server/worker/facade_photoguard_service.py "
                f"--snapshot {SNAPSHOT} --bind 127.0.0.1 --port 8000")
 DEMO_EXEC = (f"{VENV_PY} /opt/facade/src/server/photoguard_demo/app.py "
-             f"--snapshot {SNAPSHOT} --host 127.0.0.1 --port 7860 --root-path /photoguard")
+             f"--snapshot {SNAPSHOT} --host 127.0.0.1 --port 7860 --root-path /photoguard "
+             "--sample-port 7861 --sample-root-path /photoguard-sample "
+             "--quota-file /var/lib/facade/sample-quota/counts.json --runs-per-visitor 3 --runs-per-day 150")
 MODELS_EXEC = (f"{VENV_PY} /opt/facade/src/server/models/fetch_models.py "
                f"--sums /opt/facade/src/server/models/MODEL_SHA256SUMS --dest {SNAPSHOT}")
 WEB_EXEC = "/opt/facade/node/bin/node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3000"
@@ -164,7 +166,9 @@ def test_units_reference_files_in_this_repository():
 
 @pytest.mark.parametrize("script, flags", [
     ("server/worker/facade_photoguard_service.py", ("--snapshot", "--bind", "--port")),
-    ("server/photoguard_demo/app.py", ("--snapshot", "--host", "--port", "--root-path")),
+    ("server/photoguard_demo/app.py", ("--snapshot", "--host", "--port", "--root-path", "--sample-port",
+                                       "--sample-root-path", "--quota-file", "--runs-per-visitor",
+                                       "--runs-per-day")),
     ("server/models/fetch_models.py", ("--sums", "--dest")),
     ("server/health.py", ("--bearer-file",)),
 ])
@@ -348,7 +352,7 @@ def test_caddyfile_body_limits_are_per_route_and_match_the_demo():
     _, demo_body = _block(lines, "handle /photoguard/* {")
     _, web_body = _block(lines, "handle {")
     site_level = [line for line in lines if line.strip().startswith("request_body")]
-    assert len(site_level) == 3, "one request_body per handle, none at site level"
+    assert len(site_level) == 4, "one request_body per handle, none at site level"
     assert "max_size 12MB" in v1_body and "request_buffers 12MB" in v1_body
     assert "max_size 12MB" in web_body
     app_source = (SERVER / "photoguard_demo" / "app.py").read_text()
@@ -380,6 +384,38 @@ def test_demo_root_path_matches_the_caddy_route():
     root = demo.split("--root-path ", 1)[1].split()[0]
     assert f"handle {root}/* {{" in [line.strip() for line in _caddy_lines()]
     assert f"http://127.0.0.1:7860{root}/" in (SERVER / "health.py").read_text()
+
+
+def test_sample_mode_port_root_path_and_route_agree():
+    """The sample mode's port and --sample-root-path, Caddy's public route and the health check agree."""
+    demo = one(unit("facade-demo.service"), "Service", "ExecStart").split()
+    port, root = demo[demo.index("--sample-port") + 1], demo[demo.index("--sample-root-path") + 1]
+    assert (port, root) == ("7861", "/photoguard-sample")
+    lines = _caddy_lines()
+    _, body = _block(lines, f"handle {root}/* {{")
+    assert f"reverse_proxy 127.0.0.1:{port} {{" in body and "flush_interval -1" in body
+    assert f"redir {root} {root}/ 308" in [line.strip() for line in lines]
+    assert f"http://127.0.0.1:{port}{root}/" in (SERVER / "health.py").read_text()
+    # The counts file lives in the service user's own writable state folder, not in the
+    # read-only code folder or the temp folder the unit wipes on every start and stop.
+    quota_file = demo[demo.index("--quota-file") + 1]
+    assert quota_file.startswith(one(unit("facade-demo.service"), "Service", "WorkingDirectory") + "/")
+    assert "/var/lib/facade" not in one(unit("facade-demo.service"), "Service", "ExecStopPost")
+
+
+def test_caddy_sample_route_is_public_small_and_refuses_uploads():
+    """/photoguard-sample/ has no password, accepts only small requests, and refuses Gradio's upload endpoint."""
+    lines = _caddy_lines()
+    sample_start, body = _block(lines, "handle /photoguard-sample/* {")
+    web_start, _ = _block(lines, "handle {")
+    assert sample_start < web_start, "specific route before the catch-all"
+    assert not any("basic_auth" in line or "import" in line for line in body), "public: no password"
+    assert "max_size 64KB" in body
+    assert body.index("@upload path /photoguard-sample/gradio_api/upload*") < body.index("respond @upload 403")
+    assert body.index("respond @upload 403") < body.index("reverse_proxy 127.0.0.1:7861 {")
+    # The password-protected demo's route is untouched: still the only one importing the auth block.
+    _, demo_body = _block(lines, "handle /photoguard/* {")
+    assert "import /etc/caddy/facade-auth.caddy" in demo_body and "7861" not in "\n".join(demo_body)
 
 
 # --- model inventory -------------------------------------------------------------------
@@ -726,7 +762,8 @@ def test_health_main_checks_loopback_and_public_without_leaking_bearer(tmp_path,
 
     def fake_get(url, headers=None, timeout=10.0):
         seen.append((url, dict(headers or {})))
-        if url in {"http://127.0.0.1:3000/", "http://127.0.0.1:7860/photoguard/"}:
+        if url in {"http://127.0.0.1:3000/", "http://127.0.0.1:7860/photoguard/",
+                   "http://127.0.0.1:7861/photoguard-sample/"}:
             return 200, b"<html>"
         return 200, json.dumps(GOOD_CAPS).encode()
 
@@ -736,12 +773,14 @@ def test_health_main_checks_loopback_and_public_without_leaking_bearer(tmp_path,
     out = capsys.readouterr().out
     assert BEARER not in out
     report = json.loads(out)
-    assert report["facade_health"] == "ok" and set(report["checks"]) == {"web", "demo", "worker", "public"}
+    assert report["facade_health"] == "ok"
+    assert set(report["checks"]) == {"web", "demo", "sample", "worker", "public"}
     urls = [url for url, _ in seen]
     assert urls == ["http://127.0.0.1:3000/", "http://127.0.0.1:7860/photoguard/",
+                    "http://127.0.0.1:7861/photoguard-sample/",
                     "http://127.0.0.1:8000/v1/capabilities", "https://facade.example.com/v1/capabilities"]
-    assert seen[0][1] == {} and seen[1][1] == {}  # the pages never receive the worker bearer
-    assert all(headers == {"Authorization": "Bearer " + BEARER} for _, headers in seen[2:])
+    assert all(headers == {} for _, headers in seen[:3])  # the pages never receive the worker bearer
+    assert all(headers == {"Authorization": "Bearer " + BEARER} for _, headers in seen[3:])
 
 
 def test_health_main_fails_when_worker_is_not_ready(tmp_path, monkeypatch, capsys):
@@ -759,6 +798,7 @@ def test_health_main_fails_when_worker_is_not_ready(tmp_path, monkeypatch, capsy
     assert health.main(["--bearer-file", str(bearer_file), "--no-public"]) == 1
     report = json.loads(capsys.readouterr().out)
     assert report["checks"]["demo"] == {"ok": False, "error": "ConnectionRefusedError"}
+    assert report["checks"]["sample"] == {"ok": False, "error": "ConnectionRefusedError"}
     assert report["checks"]["web"] == {"ok": False, "error": "ConnectionRefusedError"}
     assert report["checks"]["worker"]["mismatched"] == ["ready"]
     assert report["checks"]["public"] == {"ok": True, "skipped": True}

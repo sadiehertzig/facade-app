@@ -17,6 +17,10 @@ You do not need to build anything to try FACADE:
 - **Website:** [facadephotoshield.com](https://facadephotoshield.com) shows what
   FACADE does to a photo, has a three-minute video, and links to official help
   services.
+- **PhotoGuard on our sample faces:**
+  [facadephotoshield.com/photoguard-sample/](https://facadephotoshield.com/photoguard-sample/)
+  runs PhotoGuard live on the team's AI-generated sample faces with a few
+  preset edits. No password; 3 runs per visitor per day.
 
 FACADE has three parts:
 
@@ -30,6 +34,8 @@ FACADE has three parts:
   [PhotoGuard](https://github.com/MadryLab/photoguard): a hosted copy of the
   original PhotoGuard demo, and the worker the website's workspace uses. The
   demo asks for a password, because it runs real AI edits on uploaded photos.
+  Its public sample mode needs none: it accepts no uploads or typed prompts,
+  only the team's sample faces and preset edits.
 
 Protection is experimental and never guaranteed. Please keep everything we
 write, in the app, on the website and in this repository, honest about that.
@@ -96,11 +102,13 @@ How the pieces fit together on the server:
 ```
 browser ──► https://<server>/             website (web/)            ──► worker on 127.0.0.1:8000
         ──► https://<server>/photoguard/  PhotoGuard demo (server/photoguard_demo/)
+        ──► https://<server>/photoguard-sample/  its public sample mode (sample faces only)
         ──► https://<server>/v1/...       worker API (server/worker/), bearer token only
 ```
 
-The website is public. Only the hosted PhotoGuard demo under `/photoguard/`
-asks for the team password. The iPhone app protects photos on the phone and
+The website and the PhotoGuard sample mode under `/photoguard-sample/` are
+public. Only the full PhotoGuard demo under `/photoguard/` asks for the team
+password. The iPhone app protects photos on the phone and
 does not send them to the server; it can only open the website in a browser.
 
 ## How to run it

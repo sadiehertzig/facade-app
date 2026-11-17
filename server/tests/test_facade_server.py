@@ -348,12 +348,13 @@ def test_refuses_when_the_server_is_not_running(world: World, capsys) -> None:
 
 
 def test_status_reports_readiness_and_basic_auth_without_printing_the_token(world: World, capsys) -> None:
-    """status shows the worker as ready, the public website and the password-protected demo as up, without sending or printing the bearer elsewhere."""
+    """status shows the worker as ready, the public website, the password-protected demo and the public sample demo as up, without sending or printing the bearer elsewhere."""
     assert tool.main(["status"]) == 0
     out = capsys.readouterr()
     assert "worker: READY" in out.out
     assert "website: HTTP 200 (up, public)" in out.out
     assert "demo: HTTP 401 (up, password protected)" in out.out
+    assert "sample demo: HTTP 200 (up, public, sample faces only)" in out.out
     unauthenticated = [c["stdin"] for c in world.calls("curl") if "/v1/" not in c["stdin"]]
     assert unauthenticated and all("Authorization" not in text for text in unauthenticated)
     assert set(world.operations()) <= {"get-caller-identity", "describe-instances", "get-parameter"}
