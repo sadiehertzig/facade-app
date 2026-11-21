@@ -396,13 +396,13 @@ function PhotoGuardSection() {
 // research-only licences (see app/ios/Models/README.md there).
 const SOURCE_URL = "https://github.com/sadiehertzig/facade-app";
 
-// Name, school and hometown, exactly as on the contest video's team tiles: no
+// Name and school, as on the contest video's team tiles: no
 // photos or contact details.
 const TEAM = [
-  { name: "Sadie Hertzig", school: "The Chapin School", hometown: "Hoboken, NJ" },
-  { name: "Aria Sharma", school: "The Lawrenceville School", hometown: "Monroe Township, NJ" },
-  { name: "Evelyn Yan", school: "The Chapin School", hometown: "Hoboken, NJ" },
-  { name: "Catalina Zapata", school: "Staples High School", hometown: "Westport, CT" },
+  { name: "Sadie Hertzig", school: "The Chapin School" },
+  { name: "Aria Sharma", school: "The Lawrenceville School" },
+  { name: "Evelyn Yan", school: "The Chapin School" },
+  { name: "Catalina Zapata", school: "Staples High School" },
 ];
 
 /** "Who we are": the team and where FACADE started. */
@@ -418,11 +418,11 @@ function TeamSection() {
         </p>
       </div>
       <ul className="team-list">
-        {TEAM.map(({ name, school, hometown }) => (
+        {TEAM.map(({ name, school }) => (
           <li key={name}>
             <strong>{name}</strong>
             <span>
-              {school} · {hometown}
+              {school}
             </span>
           </li>
         ))}

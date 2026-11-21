@@ -145,39 +145,6 @@ the complete app through the [TestFlight beta](#try-it).
 `deploy/facade_server.py`. You do not need AWS access to work on any part of
 FACADE.
 
-## Working together (for teammates)
-
-1. Get the latest `main`: `git switch main && git pull`.
-2. Make a branch for your change, named after what it does:
-   `git switch -c web/clearer-consent-text`.
-3. Make small commits with messages that say what changed and why.
-4. Run the checks for the part you touched:
-   - website: `npm test`, `npm run lint` and `npm run build` in `web/`
-   - server: `python -m pytest -q server/tests`
-   - iPhone app: `app/ios/scripts/run_host_tests.sh` and a simulator build
-5. Push the branch (`git push -u origin <branch>`) and open a pull request
-   against `main`. Say what you changed, how you tested it, and add a screenshot
-   for anything visible.
-6. Someone else on the team reviews it. When it is approved, it is merged into
-   `main`. Please do not push directly to `main`.
-
-A few rules keep the repository safe to share:
-
-- **Never commit secrets**: tokens, passwords, `.env.local`, your
-  `Local.xcconfig` (it holds your Apple team ID), certificates or provisioning
-  profiles.
-- **Never commit model weights or other large binary files.** Models are
-  shared privately; see `app/ios/Models/README.md`.
-- **Use only synthetic or fictional images** when you test, never photos of
-  real people, and do not commit test images.
-- **Changing the protection engine changes the protection.** The numerical code
-  in `app/ios/FACADE/Native/`, the `app/ios/FACADE/App/Native*.swift` files and
-  `server/worker/facade_photoguard_encoder.py` needs a teammate who knows it to
-  review the change.
-
-The `.gitignore` files already keep most of these out; run `git status` before
-you commit and check that only the files you meant to change are listed.
-
 ## Credits and licenses
 
 FACADE's own code, and the FACADE app icon made by the team, are released under

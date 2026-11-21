@@ -65,15 +65,16 @@ from typing import Any, Callable, Mapping, Sequence
 # ---------------------------------------------------------------------------
 
 # PROFILE / REGION     the AWS CLI profile and region every call uses.
-# ACCOUNT_ID           the AWS account; with EXPECTED_ARN, the only identity
-#                      this tool will run as.
+# ACCOUNT_ENV          the environment variable that holds the 12-digit AWS
+#                      account number. It is kept out of the public repository;
+#                      with the `facade` user name it is the only identity this
+#                      tool will run as.
 # PROJECT_* / INSTANCE_NAME  the tags that identify the one FACADE server.
 # OS_USER              the Ubuntu login on the server's image.
 # LIVE_STATES          instance states that count as "exists" (not terminated).
 PROFILE = "facade"
 REGION = "us-east-1"
-ACCOUNT_ID = "669707689345"
-EXPECTED_ARN = f"arn:aws:iam::{ACCOUNT_ID}:user/facade"
+ACCOUNT_ENV = "FACADE_AWS_ACCOUNT_ID"
 PROJECT_KEY = "Project"
 PROJECT_VALUE = "FACADE"
 INSTANCE_NAME = "facade-box"
@@ -246,13 +247,20 @@ def require_identity() -> dict[str, Any]:
     # `aws sts get-caller-identity` asks AWS who these credentials belong to.
     # Anything else (the account's root user, a role, another account) is
     # refused, so a mistaken profile can never act on the wrong servers.
+    account_id = os.environ.get(ACCOUNT_ENV, "").strip()
+    if not re.fullmatch(r"[0-9]{12}", account_id):
+        raise Refused(
+            f"Set {ACCOUNT_ENV} to the FACADE AWS account number (12 digits) first, for example "
+            f"`export {ACCOUNT_ENV}=123456789012` in your shell profile. It is not stored in the repository."
+        )
+    expected_arn = f"arn:aws:iam::{account_id}:user/facade"
     identity = aws("sts", "get-caller-identity")
     arn = str(identity.get("Arn", ""))
     account = str(identity.get("Account", ""))
-    if arn != EXPECTED_ARN or account != ACCOUNT_ID:
+    if arn != expected_arn or account != account_id:
         raise Refused(
             f"AWS profile '{PROFILE}' is {arn or 'an unknown principal'} (account {account or '?'}). "
-            f"This tool only runs as {EXPECTED_ARN}: never as root, a role or another account. "
+            f"This tool only runs as {expected_arn}: never as root, a role or another account. "
             "Fix it with `aws configure --profile facade` (region us-east-1) and the facade user's access key."
         )
     return identity
