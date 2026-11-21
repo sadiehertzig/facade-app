@@ -28,7 +28,7 @@ tool = importlib.util.module_from_spec(_spec)
 sys.modules["facade_server"] = tool
 _spec.loader.exec_module(tool)
 
-ACCOUNT = "669707689345"
+ACCOUNT = "123456789012"
 GOOD_ARN = f"arn:aws:iam::{ACCOUNT}:user/facade"
 TOKEN = "ef" * 32
 HOST = "198-51-100-7.sslip.io"
@@ -232,6 +232,7 @@ def world(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> World:
     ssh_state.write_text(json.dumps([_show("inactive", "dead"), _show("activating", "start"),
                                      _show("active", "exited")]), encoding="utf-8")
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+    monkeypatch.setenv("FACADE_AWS_ACCOUNT_ID", ACCOUNT)
     monkeypatch.setenv("FAKE_AWS_STATE", str(state_path))
     monkeypatch.setenv("FAKE_AWS_LOG", str(logs["aws"]))
     monkeypatch.setenv("FAKE_SSH_STATE", str(ssh_state))
@@ -329,6 +330,18 @@ def test_identity_guard_refuses_root_roles_and_other_accounts(world: World, caps
     assert tool.main(command) == 2
     assert "only runs as" in capsys.readouterr().err
     assert world.operations() == ["get-caller-identity"]
+
+
+@pytest.mark.parametrize("value", [None, "", "12345", "not-a-number"])
+def test_identity_guard_needs_the_account_number(world: World, capsys, monkeypatch, value) -> None:
+    """Without a 12-digit FACADE_AWS_ACCOUNT_ID the tool refuses before asking AWS anything."""
+    if value is None:
+        monkeypatch.delenv("FACADE_AWS_ACCOUNT_ID", raising=False)
+    else:
+        monkeypatch.setenv("FACADE_AWS_ACCOUNT_ID", value)
+    assert tool.main(["status"]) == 2
+    assert "FACADE_AWS_ACCOUNT_ID" in capsys.readouterr().err
+    assert world.operations() == []
 
 
 def test_refuses_an_instance_without_the_project_tag(world: World, capsys) -> None:

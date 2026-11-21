@@ -37,6 +37,10 @@ it, restarts services, and reads its status and logs.
 3. Check it: `aws sts get-caller-identity --profile facade` must print an ARN
    ending in `:user/facade`. The tool refuses anything else (root, roles, other
    accounts).
+4. Tell the tool which AWS account is FACADE's: add
+   `export FACADE_AWS_ACCOUNT_ID=<the 12-digit Account from step 3>` to your
+   shell profile (for example `~/.zshrc`) and open a new terminal. The number is
+   kept out of this public repository.
 
 There is no SSH port and no SSH key to keep: the tool reaches the server through
 AWS Systems Manager, pushing a throwaway key that is valid for 60 seconds.
