@@ -24,7 +24,7 @@ import SwiftUI
 public final class FACADELocalDataViewModel: ObservableObject {
     /// Shown under the explanatory text; updated after each clear attempt.
     @Published public private(set) var status =
-        "Nothing has been cleared yet. Removing the app always removes its private container."
+        "Nothing has been cleared yet. Removing the app always removes all of FACADE's files."
 
     public init() {}
 
@@ -53,7 +53,7 @@ public final class FACADELocalDataViewModel: ObservableObject {
                 ? "There were no temporary files to clear. Photos were not edited or deleted."
                 : "Cleared FACADE's temporary files. Photos were not edited or deleted."
         } catch {
-            status = "Clearing temporary files failed: \(error.localizedDescription). Deleting the app still removes its complete private container."
+            status = "FACADE couldn't clear temporary files. Deleting the app still removes all of its files."
         }
     }
 }
@@ -70,7 +70,7 @@ public struct FACADELocalDataScreen: View {
         NavigationStack {
             Form {
                 Section("Stored locally") {
-                    Text("While it protects a photo, FACADE keeps temporary working files inside this app's private container and removes them when it finishes. The app has no delete or edit permission for Photos.")
+                    Text("While it protects a photo, FACADE keeps temporary working files inside the app and removes them when it finishes. The app has no delete or edit permission for Photos.")
                     Text(model.status).font(.caption)
                 }
                 Section("Cleanup") {
@@ -81,10 +81,10 @@ public struct FACADELocalDataScreen: View {
                     }
                 }
                 Section("Complete removal") {
-                    Text("To remove the app and its entire private container, press and hold its Home Screen icon, choose Remove App, then Delete App. Originals and copies already saved in Photos remain under the phone owner's control.")
+                    Text("To remove the app, press and hold its Home Screen icon, choose Remove App, then Delete App. Originals and copies already saved in Photos stay, everything else is deleted.")
                 }
             }
-            .navigationTitle("Local Data")
+            .navigationTitle("Manage your data")
         }
         .confirmationDialog(
             "Clear FACADE's temporary files?",

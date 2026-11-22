@@ -162,7 +162,7 @@ struct FACADEDemoScreen: View {
             // Saving always asks first and says again that protection is not
             // guaranteed.
             .confirmationDialog("Save a new protected copy?", isPresented: $confirmSave, titleVisibility: .visible) {
-                Button("Save new PNG to Photos") {
+                Button("Save new copy to Photos") {
                     Task { await model.saveVerifiedCopy(userConfirmedSave: true) }
                 }
                 Button("Cancel", role: .cancel) {}
@@ -189,7 +189,7 @@ struct FACADEDemoScreen: View {
                 // is no longer in the foreground.
                 guard importGeneration == generation, importedItem == item, scenePhase == .active else { return }
                 guard let data = loaded else {
-                    model.block("This photo could not be read."); return
+                    model.block("This photo could not be read. Please try another photo."); return
                 }
                 // The file type is passed along when the picker knows it, but the model
                 // does not rely on it.
@@ -291,7 +291,7 @@ struct FACADEDemoScreen: View {
             IconBadge(systemImage: "checkmark.circle.fill")
             VStack(alignment: .leading, spacing: 6) {
                 Text("Protected copy saved").font(.headline)
-                Text("A new PNG is in your Photos library. Your original is unchanged. Share the protected copy instead of the original.")
+                Text("A new copy is in your Photos library. Your original is unchanged. Share the protected copy instead of the original.")
                     .font(.subheadline).foregroundStyle(Color.facadeMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -347,14 +347,14 @@ struct FACADEDemoScreen: View {
             Text("What are you worried about?").font(.headline)
             methodOption(.facade, icon: "face.smiling",
                          title: "Face swaps", subtitle: LivePhotoEngine.resourcesAvailable
-                            ? "FACADE · recommended default" : "FACADE · models not installed in this build")
+                            ? "FACADE · recommended default" : "This version of FACADE can't protect photos. Please update the app and try again.")
             methodOption(.miniPhotoGuard, icon: "tshirt",
                          title: "AI clothing edits", subtitle: MiniPhotoGuardEngine.resourcesAvailable
-                            ? "Mini PhotoGuard · research prototype" : "Mini PhotoGuard · unavailable in this build")
+                            ? "Mini PhotoGuard · research prototype" : "This version of Mini PhotoGuard can't protect photos. Please update the app and try again.")
             // Three possible notes: Mini PhotoGuard available, Mini PhotoGuard missing,
             // or FACADE. The timings are from the team's own test photo, not a promise.
             Text(garmentIntent
-                ? (model.selectedMethodAvailable ? "Mini PhotoGuard is a 256 × 256 full-image encoder prototype. It has no clothing mask and is not the full website method. Protection against clothing edits has not been demonstrated. Our test photo took about 6 minutes." : "PhotoGuard is suggested for this request, but its phone model is not available in this build. Choose Face swaps above to use FACADE.")
+                ? (model.selectedMethodAvailable ? "Mini PhotoGuard is a small test version that changes the whole photo. It has no clothing mask and is not the full website method. Protection against clothing edits has not been demonstrated. Our test photo took about 6 minutes." : "PhotoGuard is suggested for this request, but its phone model is not available in this build. Choose Face swaps above to use FACADE.")
                 : "FACADE targets the face-recognition step that face-swap apps rely on. Our test photo took about 1 minute on iPhone 17 Pro.")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -398,7 +398,7 @@ struct FACADEDemoScreen: View {
         VStack(alignment: .leading, spacing: 14) {
             StepTitle(number: 2, title: "Review your photo")
             photo(data, title: "Prepared preview · \(model.preparedSize)")
-            Text(garmentIntent ? "Mini PhotoGuard exports this 256 × 256 square with gray padding. The prototype changes the full image; it does not use a clothing mask." : "This is exactly what will be protected. The longest edge is at most 1,024 pixels and the aspect ratio is preserved.")
+            Text(garmentIntent ? "Mini PhotoGuard exports a small square photo with grey edges. The prototype changes the full image; it does not use a clothing mask." : "This is exactly what will be protected. The longest edge is at most 1,024 pixels and the aspect ratio is preserved.")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }.fastCard()
@@ -429,7 +429,7 @@ struct FACADEDemoScreen: View {
             Label("Keep FACADE open until it finishes. Leaving the app stops processing and clears the photo.", systemImage: "exclamationmark.circle")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Steps describe processing, not a protection score.")
+            Text("Step count shows progress, not how well the photo is protected.")
                 .font(.caption).foregroundStyle(Color.facadeMuted)
             Button("Cancel", role: .cancel) { model.cancelProcessing() }
                 .buttonStyle(SecondaryButtonStyle())
@@ -573,8 +573,8 @@ struct FACADEDemoScreen: View {
                 Text("See it against a face swap").font(.headline)
             }
             Text(model.resultMethod == .miniPhotoGuard
-                 ? "Run the same on-device InSwapper attempt on the prepared 256 × 256 original and its Mini PhotoGuard copy. This tests face swaps, not protection against clothing edits. One example is not a general protection test."
-                 : "Run the same on-device InSwapper face swap on both copies and compare. One example is not a general protection test; results vary by photo.")
+                 ? "Try a face swap on both copies, right on this phone, and compare. This tests face swaps, not protection against clothing edits. One example is not a general protection test."
+                 : "Try a face swap on both copies, right on this phone, and compare. One example is not a general protection test; results vary by photo.")
                 .font(.footnote).foregroundStyle(Color.facadeMuted)
                 .fixedSize(horizontal: false, vertical: true)
             // Before or after a failed run: the button (and any error). While running:
@@ -598,7 +598,7 @@ struct FACADEDemoScreen: View {
                         swapFace(clean, title: "Swap on original", match: model.faceOffUnprotectedMatch)
                         swapFace(protected, title: "Swap on protected", match: model.faceOffProtectedMatch)
                     }
-                    Text("Match to you: similarity of each swapped face to the original person, measured by the swap tool's own face recognizer. Higher values mean more similar to this recognizer, not proof of identity or protection.")
+                    Text("Match to you: similarity of each swapped face to the original person. Lower values mean it looks less like you, not proof of identity or protection.")
                         .font(.caption).foregroundStyle(Color.facadeMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -674,11 +674,11 @@ struct FACADEDemoScreen: View {
                 .fixedSize(horizontal: false, vertical: true)
             DisclosureGroup("About this engine") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("FACADE · 10 coarse + 6 fine steps · K2 cadence. The measured engine is unchanged. Mini PhotoGuard is a separate 256-pixel encoder prototype with 200 iterations. Neither method guarantees protection.")
+                    Text("FACADE makes many tiny changes to your face, right on your phone, to confuse face-swap AI. Mini PhotoGuard is a separate, smaller test version aimed at AI edits of clothing and backgrounds. Neither method guarantees protection.")
                         .font(.footnote).foregroundStyle(Color.facadeMuted)
                     Divider()
                     benchmarkSummary
-                    Button("Local data controls") { showingData = true }.frame(minHeight: 44)
+                    Button("Manage your data") { showingData = true }.frame(minHeight: 44)
                 }.padding(.top, 8)
             }.font(.footnote).tint(Color.facadeNavy)
         }.padding(.vertical, 6)
@@ -692,20 +692,20 @@ struct FACADEDemoScreen: View {
     /// face-swap pairs met the criterion written on screen.
     private var benchmarkSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("FACADE face-swap benchmarks").font(.subheadline.weight(.semibold))
+            Text("How FACADE did in our tests").font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.facadeText)
-            Text("Pairs meeting the test criterion, measured with an independent FaceNet recognizer.")
+            Text("How often the face swap no longer looked like the original person, checked with a separate face-recognition tool.")
                 .foregroundStyle(Color.facadeMuted)
-            benchmarkRow("Original PNG", simSwap: 176, inSwapper: 113)
+            benchmarkRow("Shared as-is", simSwap: 176, inSwapper: 113)
             Divider()
-            benchmarkRow("JPEG quality 75", simSwap: 170, inSwapper: 71)
+            benchmarkRow("Compressed", simSwap: 170, inSwapper: 71)
             Divider()
-            benchmarkRow("Half-size + JPEG quality 75", simSwap: 171, inSwapper: 69)
-            Text("48 fictional development images × 4 fixed recipients = 192 pairs per condition. All clean swaps qualified; no pairs were missing.")
+            benchmarkRow("Shrunk and compressed", simSwap: 171, inSwapper: 69)
+            Text("48 AI-made fictional faces, each swapped onto 4 other people, so 192 swaps per row.")
                 .foregroundStyle(Color.facadeMuted)
-            Text("Criterion: similarity to the source is at least 0.4 for the clean swap, below 0.4 for the protected swap, and drops by at least 0.1.")
+            Text("Swap counted as stopped when it looked like the person on the original photo but not on the protected one (score fell below 0.4 and dropped by at least 0.1).")
                 .foregroundStyle(Color.facadeMuted)
-            Text("Exploratory results from a reused development cohort, not a held-out test or a guarantee. These are FACADE results, not Mini PhotoGuard results, and are separate from the single-photo comparison above.")
+            Text("These are early results on our own test photos, not an independent test and not a guarantee. These are FACADE results, not Mini PhotoGuard results, and are separate from the single-photo comparison above.")
                 .foregroundStyle(Color.facadeMuted)
         }
         .font(.footnote)
