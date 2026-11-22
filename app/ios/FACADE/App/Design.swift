@@ -258,9 +258,10 @@ struct StatusBanner: View {
             return .info
         case "This version of FACADE can't protect photos. Please update the app and try again.",
              "No sample photo is included in this build. Choose your own photo instead.",
-             "This photo could not be prepared. Choose a clear photo with one face.":
+             "This photo could not be prepared. Choose a clear photo with one face.",
+             "This photo could not be read. Please try another photo.":
             return .warning
-        // Includes photo-read errors, save failures and any error text passed up
+        // Includes save failures and any error text passed up
         // from the engines.
         default:
             return .error
