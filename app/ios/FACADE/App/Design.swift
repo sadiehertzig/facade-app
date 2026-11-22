@@ -252,11 +252,11 @@ struct StatusBanner: View {
         case "Choose a photo of consenting adults.",
              "Confirm that you have permission to use this photo.",
              "Processing stopped. Nothing was saved.",
-             "The in-memory preview was cleared when the app left the foreground.",
+             "When you left FACADE, the photo was cleared for your privacy. Please choose the photo again.",
              "The comparison was stopped. Nothing was saved.",
              "The comparison was stopped.":
             return .info
-        case "FACADE's on-device models are not installed in this build.",
+        case "This version of FACADE can't protect photos. Please update the app and try again.",
              "No sample photo is included in this build. Choose your own photo instead.",
              "This photo could not be prepared. Choose a clear photo with one face.":
             return .warning
@@ -338,10 +338,10 @@ struct StatusBanner: View {
                 "Choose a photo of consenting adults.",
                 "Confirm that you have permission to use this photo.",
                 "Processing stopped. Nothing was saved.",
-                "The in-memory preview was cleared when the app left the foreground.",
+                "When you left FACADE, the photo was cleared for your privacy. Please choose the photo again.",
                 "The comparison was stopped. Nothing was saved.",
                 "The comparison was stopped.",
-                "FACADE's on-device models are not installed in this build.",
+                "This version of FACADE can't protect photos. Please update the app and try again.",
                 "No sample photo is included in this build. Choose your own photo instead.",
                 "This photo could not be prepared. Choose a clear photo with one face.",
                 "This photo could not be read.",

@@ -97,9 +97,6 @@ import UniformTypeIdentifiers
     // Fixed descriptive values. None of these is read by the current screens;
     // the screens write their own wording.
     let runtimeReady = true
-    let runtimeStatus = "FACADE experimental engine · 10 coarse + 6 fine steps · K2 cadence · on-device"
-    let experimentalLabel = "Experimental — protection is not guaranteed."
-    let limitations = "The shorter engine is an experimental choice. The original full comparison was incomplete. This live InSwapper view is one local example, not a general protection test. Your photos are never uploaded."
     let bundledFixtureValidationConfigured = false
     let bundledFixtureValidationAvailable = false
     let bundledFictionalAdultAvailable = true
@@ -233,7 +230,7 @@ import UniformTypeIdentifiers
         guard !busy else { return }
         let chosenMethod = selectedMethod
         guard chosenMethod != .facade || LivePhotoEngine.resourcesAvailable else {
-            block("FACADE's on-device models are not installed in this build."); return
+            block("This version of FACADE can't protect photos. Please update the app and try again."); return
         }
         let identifier = beginOperation("Preparing photo")
         stage = sample ? .processingBundledFictionalAdult : .processingLocally
@@ -301,7 +298,7 @@ import UniformTypeIdentifiers
     func cancelProcessing() {
         guard busy, !saving else { return }
         cancellationRequested = true
-        progressText = "Stopping after the current model call…"
+        progressText = "Stopping after completing this step…"
         operation?.cancel()
         // `busy` stays true until the job's task has actually finished
         // (`finishOperation`), so a new job cannot start while the old one is still
@@ -316,7 +313,7 @@ import UniformTypeIdentifiers
         if busy { cancelProcessing() }
         else if demoResult != nil || preparedInput != nil {
             clearImages()
-            stage = .blocked("The in-memory preview was cleared when the app left the foreground.")
+            stage = .blocked("When you left FACADE, the photo was cleared for your privacy. Please choose the photo again.")
         }
     }
 
@@ -397,7 +394,7 @@ import UniformTypeIdentifiers
             stage = .saved
         } catch {
             // Retain the in-memory result so permission can be retried or it can be discarded.
-            stage = .blocked("The new copy was not saved: \(error.localizedDescription)")
+            stage = .blocked("The new copy was not saved. Please allow FACADE to add photos in Settings and then tap Save again")
         }
     }
 
@@ -476,16 +473,16 @@ import UniformTypeIdentifiers
     static func stageName(_ stage: String) -> String {
         switch stage {
         case "prepare", "preparation": return "Preparing photo"
-        case "models.load", "load": return "Loading on-device models"
-        case "coverage": return "Building initial protection"
+        case "models.load", "load": return "Getting ready"
+        case "coverage": return "Adding protection"
         case "native_lift": return "Restoring image detail"
         case "native_eot8": return "Refining image"
-        case "native_realign8": return "Refining alignment"
-        case "energy80": return "Balancing image changes"
-        case "tight": return "Refining compression handling"
+        case "native_realign8": return "Lining up your face"
+        case "energy80": return "Smoothing changes"
+        case "tight": return "Preparing for sharing"
         case "masked": return "Refining face detail"
-        case "balanced_continue": return "Finishing image"
-        case "export", "encode": return "Preparing PNG"
+        case "balanced_continue": return "Finishing up"
+        case "export", "encode": return "Almost done"
         default: return stage.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: ".", with: " ").capitalized
         }
     }
